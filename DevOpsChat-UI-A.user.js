@@ -49,7 +49,7 @@
   const CORE_SESSIONS_URL = await pick([ CDN('main','src','core','sessions.js'), CDN('master','src','core','sessions.js') ]);
   const CORE_RPC_URL = await pick([ CDN('main','src','core','rpc.js'), CDN('master','src','core','rpc.js') ]);
   const UTILS_URL = await pick([ CDN('main','src','utils','helpers.js'), CDN('master','src','utils','helpers.js') ]);
-  const RENDER_URL = await pick([ CDN('main','src','render.js'), CDN('master','src','render.js') ]);
+  const RENDER_URL = await pick([ CDN('main','render','index.js'), CDN('master','render','index.js') ]);
 
   const TEMPLATES_BASE = (await (async () => {
     const probe = async (branch) => {
