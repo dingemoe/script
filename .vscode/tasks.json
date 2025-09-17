@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Auto-commit on save",
+      "type": "shell",
+      "command": "./git-auto-commit.sh",
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "fileSave"
+      }
+    }
+  ]
+}

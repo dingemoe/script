@@ -8,6 +8,8 @@
 (function() {
     'use strict';
 
+    let test = 1;
+
     if (typeof window.MyUtils === 'undefined') {
         console.error('MyUtils-biblioteket er ikke lastet.');
         return;
@@ -473,4 +475,8 @@
         subscribePresence();
         createChatUI();
     });
-})();
+})();console.log("Test auto-commit");
+console.log("Test auto-commit 2");
+console.log("Test auto-commit 3");
+// test auto-commit
+// test auto-commit 2
