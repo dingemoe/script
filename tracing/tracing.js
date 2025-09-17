@@ -780,7 +780,7 @@ class DevOpsChatTracing {
 
     disable() {
         this.config.enabled = false;
-        console.log('🔧 DevOpsChat Tracing disabled');
+        console.log.call(console, '🔧 DevOpsChat Tracing disabled');
     }
 }
 
