@@ -134,17 +134,12 @@
   }
 
   // =====================
-  // CDN HEALTH CHECK
+  // CDN HEALTH CHECK - DEAKTIVERT FOR Å UNNGÅ VUE CALLS
   // =====================
   
-  tracer.info('🌐 Performing CDN health check...');
-  const cdnHealth = await window.DevOpsChatTrace.checkCDNHealth();
-  const availableCDNs = cdnHealth.filter(cdn => cdn.available).length;
-  const totalCDNs = cdnHealth.length;
-  
-  tracer.info(`🌐 CDN Health Report: ${availableCDNs}/${totalCDNs} available`, { 
-    healthReport: cdnHealth 
-  });
+  tracer.info('🌐 Skipping CDN health check for React version');
+  const availableCDNs = 5; // Anta alle CDNs virker
+  const totalCDNs = 5;
 
   // =====================
   // SHADOW DOM CREATION MED TRACING
