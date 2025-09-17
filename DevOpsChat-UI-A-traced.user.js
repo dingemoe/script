@@ -313,7 +313,7 @@
           this.debugOutput = 'Checking CDN health...';
           const health = await window.DevOpsChatTrace.checkCDNHealth();
           const available = health.filter(h => h.available).length;
-          this.cdnStatus = \`\${available}/\${health.length}\`;
+          this.cdnStatus = `${available}/${health.length}`;
           this.debugOutput = JSON.stringify(health, null, 2);
         },
         debugState() {
