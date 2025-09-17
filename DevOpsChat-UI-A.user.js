@@ -93,9 +93,9 @@
   appContainer.id = 'devops-chat-app';
   shadowRoot.appendChild(appContainer);
 
-  // Initialize Modular Vue App
-  console.log('🚀 Initializing modular render system...');
-  const renderController = await VueRenderer.createApp(appContainer);
+  // Initialize Modular Vue App (with shadow DOM context)
+  console.log('🚀 Initializing modular render system in isolated shadow DOM...');
+  const renderController = await VueRenderer.createApp(appContainer, { shadowRoot });
   
   // Helper functions for Vue integration
   const log = (text, type = 'normal') => VueRenderer.addLog(renderController, text, type);
