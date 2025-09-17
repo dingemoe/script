@@ -141,7 +141,7 @@ workers:
 
   // Init panel
   const panel = await initPanel({
-    anchorEl: box,
+    anchorEl: appContainer,
     adapter: {
       async listSessions(){ return Object.keys(state.sessions).map(n => ({ name:n, id: state.sessions[n].id, url: state.sessions[n].url, active: n===state.current })); },
       async getActiveSession(){ if (!state.current) return null; const r=state.sessions[state.current]; return { name:state.current, id:r.id, url:r.url, active:true }; },
