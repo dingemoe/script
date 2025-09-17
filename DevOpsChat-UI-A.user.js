@@ -56,16 +56,16 @@
 
   // Chat UI
   const box = document.createElement('div');
-  box.style = 'position:fixed;z-index:999999;top:12px;right:12px;width:380px;font:12px system-ui;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.15);';
+  box.className = 'dc-chat-box';
   box.innerHTML = `
-    <div style="padding:8px 10px;border-bottom:1px solid #eee;display:flex;gap:8px;align-items:center">
+    <div class="dc-header">
       <strong>DevOpsChat</strong>
-      <span id="dc-status" style="margin-left:auto;padding:2px 6px;border-radius:6px;background:#ffd966;color:#333">No session</span>
+      <span id="dc-status" class="dc-status">No session</span>
       <button id="dc-open" title="Åpne/bytt til aktiv session">Open</button>
     </div>
-    <div id="dc-log" style="height:260px;overflow:auto;padding:8px 10px;white-space:pre-wrap"></div>
-    <div style="border-top:1px solid #eee;padding:8px 10px">
-      <input id="dc-input" placeholder="/session <navn> <url> | / | /<navn> | /<navn> -d | /<navn> -n nytt | /<navn> -u url | /dom [sel] | /js ..." style="width:100%;box-sizing:border-box;padding:6px 8px">
+    <div id="dc-log" class="dc-log"></div>
+    <div class="dc-input-section">
+      <input id="dc-input" class="dc-input" placeholder="/session <navn> <url> | / | /<navn> | /<navn> -d | /<navn> -n nytt | /<navn> -u url | /dom [sel] | /js ...">
     </div>`;
   document.body.appendChild(box);
   const logEl = box.querySelector('#dc-log');
