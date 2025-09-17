@@ -1,131 +1,102 @@
-/* DevOpsChat UI Styles */
+/* DevOpsChat UI Styles - Beer CSS Compatible */
 
-/* Main wrapper container */
-.dc-wrapper {
-  position: fixed;
-  z-index: 999999;
-  bottom: 0px;
-  right: 0px;
+/* Utility classes for positioning */
+.medium-width {
   width: 380px;
-  margin: 0;
-  padding: 0;
-  font: 12px system-ui;
 }
 
-/* Main chat container */
-.dc-chat-box {
-  width: 100%;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0,0,0,.15);
-  margin-bottom: 10px;
+/* Log styling */
+.log-container {
+  background: var(--surface-container);
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
 }
 
-/* Header section */
-.dc-header {
-  padding: 8px 10px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  gap: 8px;
-  align-items: center;
+.log-entry {
+  margin: 4px 0;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--outline-variant);
 }
 
-/* Status indicator */
-.dc-status {
-  margin-left: auto;
-  padding: 2px 6px;
-  border-radius: 6px;
-  background: #ffd966;
-  color: #333;
+.log-entry:last-child {
+  border-bottom: none;
 }
 
-.dc-status.connected {
-  background: #c6efce;
-  color: #055a00;
+/* Log types */
+.log-normal {
+  color: var(--on-surface);
 }
 
-/* Log area */
-.dc-log {
-  height: 260px;
-  overflow: auto;
-  padding: 8px 10px;
-  white-space: pre-wrap;
+.log-error {
+  color: var(--error);
+  font-weight: 500;
 }
 
-/* Input section */
-.dc-input-section {
-  border-top: 1px solid #eee;
-  padding: 8px 10px;
+.log-success {
+  color: var(--tertiary);
+  font-weight: 500;
 }
 
-.dc-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 6px 8px;
+.log-info {
+  color: var(--primary);
+  font-weight: 500;
 }
 
-/* Dev section with fixed height */
-.dc-dev {
-  height: 260px;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.dc-dev-header {
-  padding: 8px 10px;
-  background: #e9ecef;
-  border-bottom: 1px solid #dee2e6;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.log-command {
+  color: var(--secondary);
   font-weight: bold;
-}
-
-.dc-dev-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.dc-dev-content {
-  padding: 10px;
-  height: calc(100% - 40px);
-  overflow: auto;
-}
-
-.dc-dev-textarea {
-  width: 100%;
-  height: 100px;
-  margin-top: 10px;
-  padding: 8px;
-  border: 1px solid #ced4da;
+  background: var(--secondary-container);
+  padding: 4px 8px;
   border-radius: 4px;
-  font-family: monospace;
-  font-size: 11px;
-  resize: vertical;
-}
-
-/* Log entry types */
-.dc-log-entry {
   margin: 2px 0;
 }
 
-.dc-log-normal {
-  color: #333;
+/* Custom scrollbar for log area */
+.log-container::-webkit-scrollbar {
+  width: 6px;
 }
 
-.dc-log-error {
-  color: #dc3545;
+.log-container::-webkit-scrollbar-track {
+  background: var(--surface-variant);
+  border-radius: 3px;
 }
 
-.dc-log-success {
-  color: #28a745;
+.log-container::-webkit-scrollbar-thumb {
+  background: var(--outline);
+  border-radius: 3px;
 }
 
-.dc-log-info {
-  color: #007bff;
+.log-container::-webkit-scrollbar-thumb:hover {
+  background: var(--outline-variant);
+}
+
+/* Dev section specific styling */
+.dev-textarea {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  background: var(--surface-variant);
+  min-height: 120px;
+}
+
+/* Status chip animations */
+.chip {
+  transition: all 0.3s ease;
+}
+
+/* Material Icons fallback */
+i {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
 }
