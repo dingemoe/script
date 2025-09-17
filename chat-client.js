@@ -28,8 +28,9 @@
 
     let state = {
         currentChannel: MyUtils.get(`state_channel_${CLIENT_ID}`, config.defaultChannel),
-        currentMode: 'chat', // 'chat', 'menu', 'param-input', 'channel-select'
+        currentMode: 'chat', // 'chat', 'menu', 'param-input', 'channel-select', 'agent-select'
         currentMenu: null,
+        currentAgent: MyUtils.get(`state_agent_${CLIENT_ID}`, null), // Nytt: valgt agent
     };
     const activeListeners = {};
     
@@ -165,7 +166,8 @@
         'join': { cmd: 'joinChannel', description: 'Koble til kanal', params: ['channelName'] },
         'list': { cmd: 'listChannels', description: 'Vis alle kanaler' },
         'delete': { cmd: 'deleteChannel', description: 'Slett kanal', params: ['channelName'] },
-        'switch': { cmd: 'switchActiveChannel', description: 'Bytt aktiv kanal' }
+        'switch': { cmd: 'switchActiveChannel', description: 'Bytt aktiv kanal' },
+        'agents': { cmd: 'listAgents', description: 'Vis tilgjengelige agenter' }
     };
     
     // --- Hovedlogikk for input og kommandoer ---
@@ -174,10 +176,16 @@
             handleChannelSelection(text);
         } else if (state.currentMode === 'param-input') {
             handleParamInput(text);
+        } else if (state.currentMode === 'agent-select') {
+            handleAgentSelection(text);
+        } else if (state.currentMode === 'menu') {
+            handleMenuSelection(text);
         } else if (text.startsWith(config.commandPrefix)) {
             handleCommand(text.substring(config.commandPrefix.length).trim());
         } else {
-            MyUtils.sendMessage(state.currentChannel, {
+            // Hvis agent er valgt, send til agentens kanal, ellers til currentChannel
+            const targetChannel = state.currentAgent ? `agent_${state.currentAgent}` : state.currentChannel;
+            MyUtils.sendMessage(targetChannel, {
                 text: text,
                 from: SCRIPT_NAME,
                 messageId: MyUtils.getAndIncrement(`message_counter_${CLIENT_ID}`)
@@ -198,7 +206,9 @@
             appendSystemMessage(`Ukjent kommando: "${cmd}". Skriv /menu for å se alternativer.`, '❓');
             return;
         }
-        if (commandInfo.cmd === 'switchActiveChannel') {
+        if (commandInfo.cmd === 'listAgents') {
+            displayAgentList();
+        } else if (commandInfo.cmd === 'switchActiveChannel') {
             displayChannelSelectionMenu();
         } else if (commandInfo.params || commandInfo.flags) {
             handleParamCommand(commandInfo, args);
@@ -352,8 +362,19 @@
         switchChannel(channelName);
     }
 
+    // --- Agent presence: abonner på global og oppdater lastActivity ---
+    let mySubscriberId = null;
+    function subscribePresence() {
+        mySubscriberId = MyUtils.subscribeToChannel('global', { signature: SCRIPT_NAME });
+        setInterval(() => {
+            MyUtils.subscribeToChannel('global', { signature: SCRIPT_NAME }); // Oppdater lastActivity
+        }, 30000);
+    }
+
     // --- Hjelpefunksjoner ---
     function switchChannel(channelName) {
+        state.currentAgent = null;
+        MyUtils.set(`state_agent_${CLIENT_ID}`, null);
         if (state.currentChannel === channelName) {
             appendSystemMessage(`Du er allerede i kanalen **${state.currentChannel}**.`);
             return;
@@ -447,5 +468,8 @@
         });
     }
 
-    MyUtils.waitForElement('body').then(createChatUI);
+    MyUtils.waitForElement('body').then(() => {
+        subscribePresence();
+        createChatUI();
+    });
 })();

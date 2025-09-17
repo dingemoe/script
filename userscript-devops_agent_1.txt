@@ -1,0 +1,20 @@
+// ==UserScript==
+// @name         DevOps Agent 2
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  En annen chatklient for DevOps.
+// @author       DevOps Team
+// @require      https://raw.githubusercontent.com/dingemoe/script/main/common.js
+// @require      https://raw.githubusercontent.com/dingemoe/script/main/chat-client.js
+// @match        https://gitlab.com/*
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_deleteValue
+// @grant        GM_listValues
+// ==/UserScript==
+
+(function() {
+    'use strict';
+    // Sett en annen unik signatur
+    window.myChatSignature = "devops_agent_1";
+})();
