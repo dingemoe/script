@@ -207,7 +207,7 @@
         tracer.startTimer('css_loading');
         
         const cssUrls = [
-            'https://cdn.beercss.com/beer.min.css',
+            'https://cdn.jsdelivr.net/npm/beercss@3.7.11/dist/cdn/beer.min.css',
             'https://fonts.googleapis.com/icon?family=Material+Icons'
         ];
 
