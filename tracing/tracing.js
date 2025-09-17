@@ -670,7 +670,7 @@ class DevOpsChatTracing {
             const trimmed = existing.slice(-50);
             localStorage.setItem(key, JSON.stringify(trimmed));
         } catch (e) {
-            console.warn('Failed to save error to storage:', e);
+            console.warn.call(console, 'Failed to save error to storage:', e);
         }
     }
 
