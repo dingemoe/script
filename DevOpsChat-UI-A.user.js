@@ -257,7 +257,15 @@ workers:
     logLine('Ukjent kommando.');
   }
 
-  box.querySelector('#dc-open').addEventListener('click', () => { const cur=state.current; if (!cur){ log('Ingen aktiv session.'); return; } setStatus(`${cur} — Connecting…`); openSessionWindow(cur); });
+  openBtn.addEventListener('click', () => { 
+    const cur = state.current; 
+    if (!cur) { 
+      log('Ingen aktiv session.', 'error'); 
+      return; 
+    } 
+    setStatus(`${cur} — Connecting…`); 
+    openSessionWindow(cur); 
+  });
   inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { handle(e.target.value); e.target.value=''; }});
 
   await loadSessions();
