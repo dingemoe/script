@@ -82,7 +82,7 @@
   }
 
   // =====================
-  // REACT LOADING MED SMART TRACING
+  // REACT LOADING MED FORENKLET TRACING
   // =====================
   
   tracer.startTimer('react_availability_check');
@@ -95,42 +95,45 @@
       loadTime: 'immediate'
     });
   } else {
-    tracer.info('⏳ React not immediately available, starting monitoring...');
+    tracer.info('⏳ React not immediately available, starting simple monitoring...');
     
-    try {
-      // Overvåk React loading
-      await window.DevOpsChatTrace.safeAsync(async () => {
-        let attempts = 0;
-        const maxAttempts = 60; // 30 sekunder
-        
-        while ((!window.React || !window.ReactDOM) && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          attempts++;
-          
-          if (attempts % 10 === 0) {
-            tracer.debug(`⏳ React loading check ${attempts}/${maxAttempts}`, {
-              reactAvailable: !!window.React,
-              reactDOMAvailable: !!window.ReactDOM
-            });
-          }
-        }
-        
-        if (!window.React || !window.ReactDOM) {
-          throw new Error('React loading timeout after 30 seconds');
-        }
-        
+    // Forenklet React loading uten Vue-kompleksitet
+    let attempts = 0;
+    const maxAttempts = 60; // 30 sekunder
+    
+    const checkReact = () => {
+      if (window.React && window.ReactDOM) {
         tracer.endTimer('react_availability_check');
-        tracer.info('✅ React successfully loaded via monitoring system', {
+        tracer.info('✅ React successfully loaded', {
           reactVersion: window.React.version,
           attempts: attempts
         });
-      }, 'react_loading_monitor');
-      
-    } catch (error) {
-      tracer.endTimer('react_availability_check');
-      tracer.error('❌ React loading failed completely', { error: error.message });
-      return;
-    }
+        return true;
+      }
+      attempts++;
+      if (attempts >= maxAttempts) {
+        tracer.endTimer('react_availability_check');
+        tracer.error('❌ React loading timeout after 30 seconds');
+        return false;
+      }
+      return false;
+    };
+    
+    // Enkel polling hver 500ms
+    const interval = setInterval(() => {
+      if (checkReact()) {
+        clearInterval(interval);
+      }
+    }, 500);
+    
+    // Timeout fallback
+    setTimeout(() => {
+      if (!window.React || !window.ReactDOM) {
+        clearInterval(interval);
+        tracer.error('❌ React loading failed completely - stopping script');
+        return;
+      }
+    }, 30000);
   }
 
   // =====================
