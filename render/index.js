@@ -206,16 +206,9 @@ export class RenderController {
 // Legacy compatibility wrapper
 export const VueRenderer = {
   async createApp(container, options = {}) {
-    console.log('🔍 VueRenderer.createApp debug:');
-    console.log('🔍 options:', options);
-    console.log('🔍 options.vue:', options.vue);
-    console.log('🔍 window.Vue:', typeof window !== 'undefined' ? window.Vue : 'window not available');
-    
     const controller = new RenderController(options);
     // Pass Vue instance from window if available (for shadow DOM contexts)
     const vueInstance = options.vue || (typeof window !== 'undefined' ? window.Vue : null);
-    console.log('🔍 Final vueInstance:', vueInstance);
-    
     await controller.initialize(container, vueInstance);
     return controller;
   },
