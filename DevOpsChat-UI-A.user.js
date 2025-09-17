@@ -95,6 +95,10 @@
 
   // Initialize Modular Vue App (with shadow DOM context)
   console.log('🚀 Initializing modular render system in isolated shadow DOM...');
+  console.log('🔍 Debug: Checking Vue availability...');
+  console.log('🔍 window.Vue:', typeof window.Vue, window.Vue);
+  console.log('🔍 global Vue:', typeof Vue, typeof Vue !== 'undefined' ? Vue : 'undefined');
+  
   const renderController = await VueRenderer.createApp(appContainer, { 
     shadowRoot, 
     vue: window.Vue // Pass Vue instance explicitly for shadow DOM
