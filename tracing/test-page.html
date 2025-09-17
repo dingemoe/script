@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOpsChat Tracing System Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #005999;
+        }
+        .test-button.danger {
+            background: #d73a49;
+        }
+        .test-button.danger:hover {
+            background: #b02a37;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .keyboard-shortcuts {
+            background: #e2e3e5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .keyboard-shortcuts code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 DevOpsChat Tracing System Test Page</h1>
+    <p>Denne siden tester det nye tracing-systemet. Åpne konsollen for å se detaljerte logs.</p>
+    
+    <!-- Add session hash for DevOpsChat -->
+    <script>
+        if (!window.location.hash.includes('dc_session=')) {
+            window.location.hash = '#debug&dc_session=test_' + Date.now();
+        }
+    </script>
+    
+    <div class="keyboard-shortcuts">
+        <h3>⌨️ Tastatursnarvei:</h3>
+        <p><code>Ctrl+Shift+D</code> - Toggle debug panel</p>
+        <p><code>Ctrl+Shift+T</code> - Vis systemstatus</p>
+        <p><code>Ctrl+Shift+R</code> - Test RPC kommunikasjon</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 System Status</h2>
+        <p>Tracing System: <span id="tracing-status" class="status offline">Offline</span></p>
+        <p>Vue: <span id="vue-status" class="status offline">Offline</span></p>
+        <p>jQuery: <span id="jquery-status" class="status offline">Offline</span></p>
+        <p>UI Script: <span id="ui-status" class="status offline">Offline</span></p>
+        <p>Agent Script: <span id="agent-status" class="status offline">Offline</span></p>
+        
+        <button class="test-button" onclick="updateStatus()">Refresh Status</button>
+        <button class="test-button" onclick="showSystemInfo()">Show System Info</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔧 Basic Tracing Tests</h2>
+        <button class="test-button" onclick="testBasicLogging()">Test Basic Logging</button>
+        <button class="test-button" onclick="testTimers()">Test Timers</button>
+        <button class="test-button" onclick="testMemoryUsage()">Test Memory Usage</button>
+        <button class="test-button" onclick="testCDNHealth()">Test CDN Health</button>
+        <div id="basic-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>❌ Error Handling Tests</h2>
+        <button class="test-button danger" onclick="testJavaScriptError()">Trigger JS Error</button>
+        <button class="test-button danger" onclick="testPromiseRejection()">Trigger Promise Rejection</button>
+        <button class="test-button danger" onclick="testVueError()">Trigger Vue Error</button>
+        <button class="test-button" onclick="testSafeWrapper()">Test Safe Wrapper</button>
+        <div id="error-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📡 RPC Communication Tests</h2>
+        <button class="test-button" onclick="testRPCPing()">Test RPC Ping</button>
+        <button class="test-button" onclick="testRPCJavaScript()">Test RPC JavaScript</button>
+        <button class="test-button" onclick="testRPCDOM()">Test RPC DOM</button>
+        <button class="test-button" onclick="testRPCSystemInfo()">Test RPC System Info</button>
+        <div id="rpc-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎨 Vue Integration Tests</h2>
+        <button class="test-button" onclick="testVueLoading()">Test Vue Loading Monitor</button>
+        <button class="test-button" onclick="testVueComponent()">Test Vue Component</button>
+        <button class="test-button" onclick="testShadowDOM()">Test Shadow DOM</button>
+        <div id="vue-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Export & Debug Tools</h2>
+        <button class="test-button" onclick="exportLogs()">Export All Logs</button>
+        <button class="test-button" onclick="clearLogs()">Clear Logs</button>
+        <button class="test-button" onclick="showDebugPanel()">Show Debug Panel</button>
+        <button class="test-button" onclick="hideDebugPanel()">Hide Debug Panel</button>
+        <div id="export-results"></div>
+    </div>
+    
+    <!-- Load the tracing scripts -->
+    <script src="https://raw.githack.com/dingemoe/script/main/tracing/tracing.js"></script>
+    <script src="https://raw.githack.com/dingemoe/script/main/tracing/integration.js"></script>
+    
+    <!-- Load Vue for testing -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    
+    <!-- Load jQuery for RPC testing -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <script>
+        // Initialize tracing system
+        let tracer = null;
+        
+        // Wait for scripts to load
+        setTimeout(() => {
+            if (window.DevOpsChatTrace) {
+                tracer = window.DevOpsChatTrace.init('Test Page', {
+                    logLevel: 'debug',
+                    debugMode: true,
+                    autoDebugPanel: true
+                });
+                
+                tracer.info('🧪 Test page initialized');
+                updateStatus();
+            }
+        }, 1000);
+        
+        function updateStatus() {
+            // Update tracing status
+            const tracingEl = document.getElementById('tracing-status');
+            if (window.DevOpsChatTrace && tracer) {
+                tracingEl.textContent = 'Online';
+                tracingEl.className = 'status online';
+            } else {
+                tracingEl.textContent = 'Offline';
+                tracingEl.className = 'status offline';
+            }
+            
+            // Update Vue status
+            const vueEl = document.getElementById('vue-status');
+            if (window.Vue) {
+                vueEl.textContent = `Online (${window.Vue.version})`;
+                vueEl.className = 'status online';
+            } else {
+                vueEl.textContent = 'Offline';
+                vueEl.className = 'status offline';
+            }
+            
+            // Update jQuery status
+            const jqueryEl = document.getElementById('jquery-status');
+            if (window.jQuery) {
+                jqueryEl.textContent = `Online (${window.jQuery.fn.jquery})`;
+                jqueryEl.className = 'status online';
+            } else {
+                jqueryEl.textContent = 'Offline';
+                jqueryEl.className = 'status offline';
+            }
+            
+            // Update UI script status
+            const uiEl = document.getElementById('ui-status');
+            if (window.__DEVOPSCHAT_UI_A__) {
+                uiEl.textContent = 'Online';
+                uiEl.className = 'status online';
+            } else {
+                uiEl.textContent = 'Not Loaded';
+                uiEl.className = 'status offline';
+            }
+            
+            // Update Agent script status
+            const agentEl = document.getElementById('agent-status');
+            if (window.__DEVOPSCHAT_AGENT_B__) {
+                agentEl.textContent = 'Online';
+                agentEl.className = 'status online';
+            } else {
+                agentEl.textContent = 'Not Loaded';
+                agentEl.className = 'status offline';
+            }
+        }
+        
+        function showResult(sectionId, message, type = 'info') {
+            const section = document.getElementById(sectionId);
+            const result = document.createElement('div');
+            result.className = `result ${type}`;
+            result.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            section.appendChild(result);
+            
+            // Keep only last 5 results
+            while (section.children.length > 5) {
+                section.removeChild(section.firstChild);
+            }
+        }
+        
+        function showSystemInfo() {
+            if (!tracer) {
+                showResult('basic-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            const state = window.DevOpsChatTrace.debugState();
+            showResult('basic-results', `System Info: ${JSON.stringify(state, null, 2)}`, 'info');
+        }
+        
+        // Basic tracing tests
+        function testBasicLogging() {
+            if (!tracer) {
+                showResult('basic-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            tracer.debug('🧪 Debug test message');
+            tracer.info('🧪 Info test message');
+            tracer.warn('🧪 Warning test message');
+            
+            showResult('basic-results', 'Basic logging test completed - check console and debug panel', 'success');
+        }
+        
+        function testTimers() {
+            if (!tracer) {
+                showResult('basic-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            tracer.startTimer('test_operation');
+            
+            setTimeout(() => {
+                const duration = tracer.endTimer('test_operation');
+                showResult('basic-results', `Timer test: ${duration.toFixed(2)}ms`, 'success');
+            }, 1000);
+        }
+        
+        function testMemoryUsage() {
+            if (!tracer) {
+                showResult('basic-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            const memory = window.DevOpsChatTrace.getMemoryUsage();
+            if (memory) {
+                showResult('basic-results', `Memory: ${memory.used}MB/${memory.total}MB (Limit: ${memory.limit}MB)`, 'success');
+            } else {
+                showResult('basic-results', 'Memory monitoring not available in this browser', 'info');
+            }
+        }
+        
+        async function testCDNHealth() {
+            if (!tracer) {
+                showResult('basic-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            showResult('basic-results', 'Testing CDN health...', 'info');
+            
+            try {
+                const health = await window.DevOpsChatTrace.checkCDNHealth();
+                const available = health.filter(h => h.available).length;
+                showResult('basic-results', `CDN Health: ${available}/${health.length} available`, 'success');
+            } catch (error) {
+                showResult('basic-results', `CDN test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Error handling tests
+        function testJavaScriptError() {
+            if (!tracer) {
+                showResult('error-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            // This should be caught by the global error handler
+            setTimeout(() => {
+                throw new Error('🧪 Test JavaScript error');
+            }, 100);
+            
+            showResult('error-results', 'JavaScript error triggered - check tracing logs', 'info');
+        }
+        
+        function testPromiseRejection() {
+            if (!tracer) {
+                showResult('error-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            // This should be caught by unhandled rejection handler
+            Promise.reject(new Error('🧪 Test promise rejection'));
+            
+            showResult('error-results', 'Promise rejection triggered - check tracing logs', 'info');
+        }
+        
+        function testVueError() {
+            if (!tracer || !window.Vue) {
+                showResult('error-results', 'Vue or tracing not available', 'error');
+                return;
+            }
+            
+            try {
+                const { createApp } = window.Vue;
+                const app = createApp({
+                    template: '<div>{{ invalidMethod() }}</div>',
+                    methods: {
+                        invalidMethod() {
+                            throw new Error('🧪 Test Vue component error');
+                        }
+                    }
+                });
+                
+                // This should trigger Vue error handler
+                const testDiv = document.createElement('div');
+                document.body.appendChild(testDiv);
+                app.mount(testDiv);
+                
+                setTimeout(() => {
+                    document.body.removeChild(testDiv);
+                }, 1000);
+                
+            } catch (error) {
+                showResult('error-results', `Vue error test: ${error.message}`, 'info');
+            }
+        }
+        
+        function testSafeWrapper() {
+            if (!tracer) {
+                showResult('error-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            // Test safe wrapper - this should NOT crash but log the error
+            const safeFn = tracer.safe(() => {
+                throw new Error('🧪 Test safe wrapper error');
+            }, 'safe_wrapper_test');
+            
+            try {
+                safeFn();
+            } catch (error) {
+                showResult('error-results', 'Safe wrapper test failed - error was not caught', 'error');
+                return;
+            }
+            
+            showResult('error-results', 'Safe wrapper test successful - error caught safely', 'success');
+        }
+        
+        // RPC tests
+        function testRPCPing() {
+            if (!tracer) {
+                showResult('rpc-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            window.DevOpsChatTrace.testRPC();
+            showResult('rpc-results', 'RPC ping test initiated - check debug panel', 'info');
+        }
+        
+        function testRPCJavaScript() {
+            // Test RPC JavaScript execution
+            window.postMessage({
+                kind: 'rpc_call',
+                method: 'executeJS',
+                data: { code: 'console.log("🧪 RPC JS test"); return "RPC JS test successful";' },
+                requestId: 'js_test_' + Date.now()
+            }, '*');
+            
+            showResult('rpc-results', 'RPC JavaScript test sent', 'info');
+        }
+        
+        function testRPCDOM() {
+            // Create test element first
+            const testEl = document.createElement('div');
+            testEl.id = 'rpc-test-element';
+            testEl.textContent = 'RPC Test Element';
+            testEl.style.cssText = 'position: fixed; top: 100px; right: 10px; background: yellow; padding: 10px; z-index: 9999;';
+            document.body.appendChild(testEl);
+            
+            // Test DOM manipulation via RPC
+            window.postMessage({
+                kind: 'rpc_call',
+                method: 'manipulateDOM',
+                data: { 
+                    selector: '#rpc-test-element',
+                    action: 'css',
+                    property: 'background-color',
+                    value: 'lime'
+                },
+                requestId: 'dom_test_' + Date.now()
+            }, '*');
+            
+            showResult('rpc-results', 'RPC DOM test sent - yellow box should turn lime', 'info');
+            
+            // Clean up after 5 seconds
+            setTimeout(() => {
+                if (document.getElementById('rpc-test-element')) {
+                    document.body.removeChild(testEl);
+                }
+            }, 5000);
+        }
+        
+        function testRPCSystemInfo() {
+            window.postMessage({
+                kind: 'rpc_call',
+                method: 'getSystemInfo',
+                requestId: 'sysinfo_test_' + Date.now()
+            }, '*');
+            
+            showResult('rpc-results', 'RPC system info test sent', 'info');
+        }
+        
+        // Vue tests
+        async function testVueLoading() {
+            if (!tracer) {
+                showResult('vue-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            showResult('vue-results', 'Testing Vue loading monitor...', 'info');
+            
+            try {
+                await tracer.monitorVueLoading(5000);
+                showResult('vue-results', 'Vue loading monitor test successful', 'success');
+            } catch (error) {
+                showResult('vue-results', `Vue loading test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testVueComponent() {
+            if (!window.Vue || !tracer) {
+                showResult('vue-results', 'Vue or tracing not available', 'error');
+                return;
+            }
+            
+            const { createApp } = window.Vue;
+            const app = createApp({
+                template: '<div style="background: lightblue; padding: 10px; margin: 10px;">🧪 Test Vue Component - {{ message }}</div>',
+                data() {
+                    return { message: 'Working!' };
+                },
+                mounted() {
+                    tracer.info('🎯 Test Vue component mounted');
+                }
+            });
+            
+            const testDiv = document.createElement('div');
+            document.getElementById('vue-results').appendChild(testDiv);
+            app.mount(testDiv);
+            
+            showResult('vue-results', 'Vue component test created', 'success');
+        }
+        
+        function testShadowDOM() {
+            if (!tracer) {
+                showResult('vue-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            const shadowHost = document.createElement('div');
+            shadowHost.style.cssText = 'border: 2px solid blue; padding: 10px; margin: 10px;';
+            
+            const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
+            shadowRoot.innerHTML = '<p style="color: blue;">🌑 Shadow DOM Test - Isolated Content</p>';
+            
+            document.getElementById('vue-results').appendChild(shadowHost);
+            
+            tracer.info('🌑 Shadow DOM test element created');
+            showResult('vue-results', 'Shadow DOM test created', 'success');
+        }
+        
+        // Export & debug tools
+        function exportLogs() {
+            if (!tracer) {
+                showResult('export-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            tracer.exportLogs();
+            showResult('export-results', 'Logs exported to downloads', 'success');
+        }
+        
+        function clearLogs() {
+            if (!tracer) {
+                showResult('export-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            tracer.clearLogs();
+            showResult('export-results', 'Logs cleared', 'success');
+        }
+        
+        function showDebugPanel() {
+            if (!tracer) {
+                showResult('export-results', 'Tracing system not initialized', 'error');
+                return;
+            }
+            
+            tracer.createDebugPanel();
+            showResult('export-results', 'Debug panel shown', 'success');
+        }
+        
+        function hideDebugPanel() {
+            const panel = document.getElementById('devopschat-debug-panel');
+            if (panel) {
+                panel.remove();
+                showResult('export-results', 'Debug panel hidden', 'success');
+            } else {
+                showResult('export-results', 'Debug panel not found', 'info');
+            }
+        }
+        
+        // Listen for RPC responses
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.kind === 'rpc_response') {
+                const method = event.data.method;
+                const success = event.data.success;
+                const result = event.data.result;
+                
+                if (success) {
+                    showResult('rpc-results', `RPC ${method} success: ${JSON.stringify(result).substring(0, 100)}`, 'success');
+                } else {
+                    showResult('rpc-results', `RPC ${method} failed: ${event.data.error}`, 'error');
+                }
+            }
+        });
+        
+        // Auto-refresh status every 5 seconds
+        setInterval(updateStatus, 5000);
+    </script>
+</body>
+</html>
