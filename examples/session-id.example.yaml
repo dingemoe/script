@@ -1,0 +1,15 @@
+# session-id.example.yaml
+sessionId: "sesjon-12345"
+name: "min_eksempelsesjon"
+url: "https://min_url.no/api"
+workers:
+  - name: "worker1"
+    input: "test:13;hei:23;"
+    textarea: |
+      // js code
+      console.log("worker1");
+  - name: "worker2"
+    input: "jaja:13;en:23;"
+    textarea: |
+      // js code
+      console.log("worker2");

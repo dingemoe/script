@@ -1,0 +1,38 @@
+# workers.yaml: Fabrikk for gjenbrukbare workerspesifikke komponenter.
+
+factory:
+  - name: "worker"
+    description: "En mal for en generisk worker."
+    params: "prop"
+    col:
+      name: "{{ prop.name }}"
+      props: "{{ prop.col_props }}"
+      attr:
+        style: "{{ prop.col_style }}"
+      components:
+        - repeat: "container"
+          for: "card"
+          in:
+            - name: "worker_card"
+              container_class: "shadow-lg bg-white rounded-lg"
+              header_class: "p-4 text-lg font-bold border-b"
+              body_class: "p-4"
+              footer_class: "p-4 border-t"
+              header_hidden: "{{ prop.header_hidden | default(false) }}"
+              components:
+                - name: "input"
+                  props: "{{ prop.input_props }}"
+                  js_path: ""
+                  description: "Inndatafelt for parametere."
+                  placeholder: "{{ prop.input_placeholder }}"
+                  content: "{{ prop.input_value }}"
+                  attr:
+                    style: "{{ prop.input_style }}"
+                - name: "textarea"
+                  props: "{{ prop.textarea_props }}"
+                  js_path: "{{ prop.textarea_js_path }}"
+                  description: "Tekstområde for JS-kode."
+                  placeholder: "{{ prop.textarea_placeholder }}"
+                  content: "{{ prop.textarea_content }}"
+                  attr:
+                    style: "{{ prop.textarea_style }}"

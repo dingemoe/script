@@ -1,0 +1,36 @@
+# utils.yaml: Fabrikk for vanlige verktøy og layouter.
+
+factory:
+  - name: "monitor"
+    description: "En gjenbrukbar layout for en DOM-konsoll."
+    params: "prop"
+    row:
+      props: "{{ prop.row_props }}"
+      attr:
+        style: "{{ prop.row_style }}"
+      components:
+        - repeat: "container"
+          for: "card"
+          in:
+            - name: "monitor_card"
+              container_class: "shadow-lg bg-white rounded-lg"
+              header_class: "p-4 text-lg font-bold border-b"
+              body_class: "p-4"
+              footer_class: "p-4 border-t"
+              header_hidden: false
+              footer_hidden: false
+              header_components: "DOM Console"
+              body_components:
+                - name: "dom-view"
+                  js_path: "textarea.dom_textarea_console"
+                  description: "Visualiserer DOM med syntaksutheving."
+                  props: "{{ prop.dom_view_props }}"
+                  attr:
+                    style: "{{ prop.dom_view_style }}"
+                - name: "dom-input-console"
+                  js_path: "input.dom_input_console"
+                  description: "Inndatafelt for interaksjon med DOM."
+                  props: "{{ prop.dom_input_props }}"
+                  attr:
+                    style: "{{ prop.dom_input_style }}"
+              footer_components: "Status: Ready"

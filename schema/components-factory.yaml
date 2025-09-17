@@ -1,0 +1,67 @@
+# components-factory.yaml: Fabrikk for gjenbrukbare UI-komponenter.
+
+factory:
+  - name: "row"
+    description: "Mal for en UI-rad."
+    params: "prop"
+    row:
+      props: "{{ prop.class }}"
+      attr:
+        style: "{{ prop.style }}"
+      components: []
+
+  - name: "col"
+    description: "Mal for en UI-kolonne."
+    params: "prop"
+    col:
+      props: "{{ prop.class }}"
+      attr:
+        style: "{{ prop.style }}"
+      components: []
+
+  - name: "button"
+    description: "Mal for en klikkbar knapp."
+    params: "prop"
+    button:
+      props: "{{ prop.class }}"
+      text: "{{ prop.text }}"
+      attr:
+        style: "{{ prop.style }}"
+
+  - name: "textarea"
+    description: "Mal for et tekstområde."
+    params: "prop"
+    textarea:
+      props: "{{ prop.class }}"
+      content: "{{ prop.content }}"
+      attr:
+        style: "{{ prop.style }}"
+
+  - name: "input"
+    description: "Mal for et inndatafelt."
+    params: "prop"
+    input:
+      props: "{{ prop.class }}"
+      value: "{{ prop.value }}"
+      attr:
+        style: "{{ prop.style }}"
+
+  - name: "container"
+    description: "En kortlignende komponent med valgfri topp- og bunntekst."
+    params: "prop"
+    container:
+      props: "{{ prop.container_class }}"
+      attr:
+        style: "{{ prop.style }}"
+      header:
+        hidden: "{{ prop.header_hidden | default(true) }}"
+        props: "{{ prop.header_class }}"
+        components: []
+      body:
+        hidden: "{{ prop.body_hidden | default(false) }}"
+        props: "{{ prop.body_class }}"
+        components: []
+      footer:
+        hidden: "{{ prop.footer_hidden | default(true) }}"
+        props: "{{ prop.footer_class }}"
+        components: []

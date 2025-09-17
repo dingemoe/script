@@ -1,0 +1,78 @@
+# layout.yaml: Definerer hele UI-layouten ved å importere og konfigurere komponenter.
+
+imports:
+  - source: "components-factory.yaml"
+    type: "factory"
+  - source: "workers.yaml"
+    type: "factory"
+  - source: "utils.yaml"
+    type: "factory"
+
+layout:
+  - name: "header"
+    repeat: "row"
+    for: "section"
+    in:
+      - name: "header_section"
+        class: "bg-blue-600 p-4 text-white"
+        components:
+          - repeat: "col"
+            for: "col"
+            in:
+              - name: "logo_col"
+                class: "w-1/2"
+                components: "My App Logo"
+              - name: "title_col"
+                class: "w-1/2 text-right"
+                components: "Session Management"
+
+  - name: "body"
+    repeat: "row"
+    for: "row"
+    in:
+      - name: "monitor_row"
+        class: "p-4"
+        components:
+          - repeat: "monitor"
+            for: "monitor_data"
+            in:
+              - name: "session_monitor"
+                row_props: "flex"
+                dom_view_props: "bg-gray-800 text-white"
+                dom_input_props: "border"
+                dom_view_style: "height: 400px;"
+                dom_input_style: "width: 100%;"
+      - name: "workers_row"
+        class: "p-8 space-x-4 flex"
+        components:
+          - repeat: "worker"
+            for: "instance"
+            in:
+              - name: "worker1"
+                col_props: "w-1/2"
+                col_style: "border: 1px solid #ccc;"
+                header_hidden: false
+                footer_hidden: true
+                input_props: "text-red-500"
+                input_style: "border-radius: 5px;"
+                input_placeholder: "f.eks. antall:100;"
+                input_value: "data:fil_a;"
+                textarea_props: "font-mono"
+                textarea_style: "height: 200px;"
+                textarea_placeholder: "Skriv inn JS her..."
+                textarea_content: |
+                  console.log("Behandler fil A");
+              - name: "worker2"
+                col_props: "w-1/2"
+                col_style: "box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                header_hidden: true
+                footer_hidden: false
+                input_props: "text-blue-500"
+                input_style: "background-color: #f0f0f0;"
+                input_placeholder: "f.eks. data:rapport;"
+                input_value: "data:fil_b;"
+                textarea_props: "font-mono"
+                textarea_style: "color: #333;"
+                textarea_placeholder: "Skriv inn JS her..."
+                textarea_content: |
+                  console.log("Behandler fil B");
