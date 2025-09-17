@@ -656,7 +656,7 @@ class DevOpsChatTracing {
                 // Don't restore metrics as they should start fresh
             }
         } catch (e) {
-            console.warn('Failed to load logs from storage:', e);
+            console.warn.call(console, 'Failed to load logs from storage:', e);
         }
     }
 
