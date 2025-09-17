@@ -27,8 +27,8 @@
 
   // Script info and modified time logging
   const SCRIPT_NAME = 'DevOpsChat UI (A) — Vue 3 + Beer CSS Edition';
-  const SCRIPT_VERSION = '5.1.1';
-  const MODIFIED_DATE = new Date('2025-09-17T21:30:00Z'); // Update this when modifying script
+  const SCRIPT_VERSION = '5.1.2';
+  const MODIFIED_DATE = new Date('2025-09-17T21:45:00Z'); // Update this when modifying script
   
   const getRelativeTime = (date) => {
     const now = new Date();
