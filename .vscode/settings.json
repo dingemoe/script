@@ -2,8 +2,8 @@
   "emeraldwalk.runonsave": {
     "commands": [
       {
-        "match": ".*\\.js$",
-        "cmd": "cd /workspaces/script && ./git-auto-commit.sh"
+        "match": "\\.js$",
+        "cmd": "cd ${workspaceFolder} && ./git-auto-commit.sh"
       }
     ]
   }

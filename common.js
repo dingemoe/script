@@ -1,6 +1,8 @@
 // common.js - host på GitHub eller egen server
 (function() {
     'use strict';
+
+    console.log("hei")
     
     window.MyUtils = {
         // Eksisterende funksjoner
