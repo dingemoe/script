@@ -20,12 +20,19 @@
   if (window.__DEVOPSCHAT_UI_A__) return;
   window.__DEVOPSCHAT_UI_A__ = true;
 
-  // Load CSS
+  // Load CSS resources
   try {
-    const css = GM_getResourceText('devopschat-style');
-    GM_addStyle(css);
+    const beerCSS = GM_getResourceText('beer-css');
+    const materialIcons = GM_getResourceText('material-icons');
+    const customCSS = GM_getResourceText('devopschat-style');
+    
+    GM_addStyle(beerCSS);
+    GM_addStyle(materialIcons);
+    GM_addStyle(customCSS);
+    
+    console.log('✅ DevOpsChat: CSS resources loaded successfully');
   } catch (e) {
-    console.warn('DevOpsChat: Failed to load CSS resource:', e);
+    console.warn('⚠️ DevOpsChat: Failed to load CSS resources:', e);
   }
 
   const GH_USER = 'dingemoe';
