@@ -193,8 +193,8 @@ export class RenderController {
 
 // Legacy compatibility wrapper
 export const VueRenderer = {
-  async createApp(container) {
-    const controller = new RenderController();
+  async createApp(container, options = {}) {
+    const controller = new RenderController(options);
     await controller.initialize(container);
     return controller;
   },
