@@ -65,3 +65,4 @@ factory:
         hidden: "{{ prop.footer_hidden | default(true) }}"
         props: "{{ prop.footer_class }}"
         components: []
+

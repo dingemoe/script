@@ -25,7 +25,7 @@ layout:
               - name: "title_col"
                 class: "w-1/2 text-right"
                 components: "Session Management"
-
+  
   - name: "body"
     repeat: "row"
     for: "row"

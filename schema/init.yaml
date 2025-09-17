@@ -1,13 +1,14 @@
 # init.yaml
+
 scope:
   import: "session-id.yaml"
-
+  
 controller:
   data:
     scope:
       session: "{{ scope.sessionId }}"
       name: "{{ scope.name }}"
-      url: "{{ scope.url }}"
+      url: "{{ scope.name }}"
       workers: "{{ scope.workers }}"
   init:
     - action: "controller"
