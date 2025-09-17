@@ -344,6 +344,39 @@ class DevOpsChatTracing {
         });
     }
 
+    monitorReactLoading(timeout = 30000) {
+        this.info('⚛️ Starting React loading monitor', { timeout });
+        
+        const checkReact = () => {
+            if (window.React && window.ReactDOM) {
+                this.info('✅ React loaded successfully', { 
+                    reactVersion: window.React.version,
+                    hasReactDOM: !!window.ReactDOM
+                });
+                return true;
+            }
+            return false;
+        };
+        
+        if (checkReact()) return Promise.resolve();
+        
+        return new Promise((resolve, reject) => {
+            const interval = setInterval(() => {
+                if (checkReact()) {
+                    clearInterval(interval);
+                    clearTimeout(timeoutId);
+                    resolve();
+                }
+            }, 500);
+            
+            const timeoutId = setTimeout(() => {
+                clearInterval(interval);
+                this.error('❌ React loading timeout', { timeout });
+                reject(new Error('React loading timeout'));
+            }, timeout);
+        });
+    }
+
     monitorRPCCommunication() {
         const originalPostMessage = window.postMessage;
         window.postMessage = (...args) => {
