@@ -47,7 +47,10 @@ export const importPanelControllers = async () => {
 
 // Main render controller class
 export class RenderController {
-  constructor() {
+  constructor(options = {}) {
+    this.shadowRoot = options.shadowRoot;
+    this.appInstance = null;
+    this.panels = {};
     this.vue = null;
     this.panels = {};
     this.appInstance = null;
