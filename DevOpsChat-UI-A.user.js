@@ -287,8 +287,8 @@ workers:
   await loadSessions();
   
   // Update Vue app with initial state
-  vueApp.sessions = state.sessions;
-  vueApp.currentSession = state.current;
+  VueRenderer.updateSessions(vueApp, state.sessions);
+  VueRenderer.setCurrentSession(vueApp, state.current);
   
   if (Object.keys(state.sessions).length) {
     setStatus('No session — press "/"');
