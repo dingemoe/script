@@ -125,7 +125,7 @@
         document.body.appendChild(toggleBtn);
 
         const header = MyUtils.createElement('div', { id: `myutils-chat-header-${CLIENT_ID}` });
-        header.innerHTML = `<h3>MyUtils Chat</h3><span class="channel-name" id="myutils-channel-name-${CLIENT_ID}">#${state.currentChannel}</span>`;
+        header.innerHTML = `<h3>MyUtils Chat23</h3><span class="channel-name" id="myutils-channel-name-${CLIENT_ID}">#${state.currentChannel}</span>`;
         chatContainer.appendChild(header);
 
         const chatLog = MyUtils.createElement('div', { id: `myutils-chat-log-${CLIENT_ID}` });
