@@ -207,7 +207,9 @@ export class RenderController {
 export const VueRenderer = {
   async createApp(container, options = {}) {
     const controller = new RenderController(options);
-    await controller.initialize(container);
+    // Pass Vue instance from window if available (for shadow DOM contexts)
+    const vueInstance = options.vue || (typeof window !== 'undefined' ? window.Vue : null);
+    await controller.initialize(container, vueInstance);
     return controller;
   },
 
