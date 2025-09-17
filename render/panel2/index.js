@@ -24,14 +24,15 @@ const getVue = (vueInstance = null) => {
 };
 
 export class DevPanelController {
-  constructor() {
+  constructor(vueInstance = null) {
     this.devContent = '';
     this.isExpanded = true;
     this.vue = null;
+    this.vueInstance = vueInstance; // Store for later initialization
   }
 
   initialize() {
-    this.vue = getVue();
+    this.vue = getVue(this.vueInstance);
     return this.createComponent();
   }
 
