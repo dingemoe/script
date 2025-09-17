@@ -54,6 +54,7 @@
   const Sessions = await import(CORE_SESSIONS_URL);
   const RPC = await import(CORE_RPC_URL);
   const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
+  const { Renderer } = await import(RENDER_URL);
 
   // Chat UI
   const wrapper = document.createElement('div');
