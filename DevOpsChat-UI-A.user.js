@@ -1,0 +1,257 @@
+// ==UserScript==
+// @name         DevOpsChat UI (A) — Sessions + Panel (githack) + YAML-tab
+// @match        *://*/*
+// @version      4
+// @description  Slankt UI som laster panel og helpers fra GitHub via raw.githack.com. Har Rediger, Oppsett (session-<id>.yaml), YAML (alle yaml).
+// @grant        GM.getValue
+// @grant        GM.setValue
+// @grant        GM.deleteValue
+// ==/UserScript==
+
+(async () => {
+  const GH_USER = 'dingemoe';
+  const GH_REPO = 'script';
+  const CDN = (...p) => `https://raw.githack.com/${GH_USER}/${GH_REPO}/${p.join('/')}`;
+
+  const pick = async (cands) => {
+    for (const u of cands) { try { const r = await fetch(u, { method:'HEAD' }); if (r.ok) return u; } catch {} }
+    return cands[0];
+  };
+
+  const PANEL_URL = await pick([ CDN('main','src','panel','index.js'), CDN('main','src','index.js'), CDN('main','panel','index.js'),
+                                 CDN('master','src','panel','index.js'), CDN('master','src','index.js') ]);
+  const CORE_SESSIONS_URL = await pick([ CDN('main','src','core','sessions.js'), CDN('master','src','core','sessions.js') ]);
+  const CORE_RPC_URL = await pick([ CDN('main','src','core','rpc.js'), CDN('master','src','core','rpc.js') ]);
+  const UTILS_URL = await pick([ CDN('main','src','utils','helpers.js'), CDN('master','src','utils','helpers.js') ]);
+
+  const TEMPLATES_BASE = (await (async () => {
+    const probe = async (branch) => {
+      const u = CDN(branch,'schema','components-factory.yaml');
+      try { const r = await fetch(u, { method:'HEAD' }); if (r.ok) return `https://raw.githack.com/${GH_USER}/${GH_REPO}/${branch}`; } catch {}
+      return null;
+    };
+    return (await probe('main')) || (await probe('master')) || `https://raw.githack.com/${GH_USER}/${GH_REPO}/main`;
+  })());
+
+  const { initPanel } = await import(PANEL_URL);
+  const Sessions = await import(CORE_SESSIONS_URL);
+  const RPC = await import(CORE_RPC_URL);
+  const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
+
+  // Chat UI
+  const box = document.createElement('div');
+  box.style = 'position:fixed;z-index:999999;bottom:12px;right:12px;width:380px;font:12px system-ui;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.15);';
+  box.innerHTML = `
+    <div style="padding:8px 10px;border-bottom:1px solid #eee;display:flex;gap:8px;align-items:center">
+      <strong>DevOpsChat</strong>
+      <span id="dc-status" style="margin-left:auto;padding:2px 6px;border-radius:6px;background:#ffd966;color:#333">No session</span>
+      <button id="dc-open" title="Åpne/bytt til aktiv session">Open</button>
+    </div>
+    <div id="dc-log" style="height:260px;overflow:auto;padding:8px 10px;white-space:pre-wrap"></div>
+    <div style="border-top:1px solid #eee;padding:8px 10px">
+      <input id="dc-input" placeholder="/session <navn> <url> | / | /<navn> | /<navn> -d | /<navn> -n nytt | /<navn> -u url | /dom [sel] | /js ..." style="width:100%;box-sizing:border-box;padding:6px 8px">
+    </div>`;
+  document.body.appendChild(box);
+  const logEl = box.querySelector('#dc-log');
+  const inp   = box.querySelector('#dc-input');
+  const statusEl = box.querySelector('#dc-status');
+  const log = (t)=>{ const d=document.createElement('div'); d.textContent=t; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; };
+  const setStatus = (text, ok=false)=>{ statusEl.textContent=text; statusEl.style.background=ok?'#c6efce':'#ffd966'; statusEl.style.color=ok?'#055a00':'#333'; };
+
+  // Sessions / GM
+  const STORAGE_SESSIONS = 'dc_sessions_v1';
+  const YAML_KEY = (name) => `yaml:${name}`;
+  const SFILE_KEY = (id) => `session-${id}.yaml`;
+  let state = { current:null, sessions:{} };
+
+  async function loadSessions(){ try { state.sessions = JSON.parse(await GM.getValue(STORAGE_SESSIONS, '{}')) || {}; } catch { state.sessions = {}; } }
+  async function saveSessions(){ await GM.setValue(STORAGE_SESSIONS, JSON.stringify(state.sessions)); }
+  async function setActive(name){
+    state.current = name;
+    await Promise.all(Object.keys(state.sessions).map(async n => {
+      const rec = state.sessions[n];
+      const txt =
+`session:
+  name: "${n}"
+  url: "${rec.url}"
+  id: "${rec.id}"
+  active: ${n===name}`;
+      await GM.setValue(YAML_KEY(n), txt);
+    }));
+  }
+  async function ensureSessionYamlFile(rec, name){
+    const k = SFILE_KEY(rec.id);
+    const exists = await GM.getValue(k, null);
+    if (exists == null) {
+      const def =
+`sessionId: "${rec.id}"
+name: "${name}"
+url: "${rec.url}"
+workers:
+  - name: "worker1"
+    input: ""
+    textarea: |
+      // js code
+  - name: "worker2"
+    input: ""
+    textarea: |
+      // js code`;
+      await GM.setValue(k, def);
+    }
+  }
+
+  // RPC
+  const rpc = RPC.createRpcBridge();
+  window.addEventListener('message', (ev) => {
+    const m = ev.data; if (!m) return;
+    if (m.kind === 'hello_from_B') {
+      const name = m.session || state.current;
+      const ori  = m.origin || ev.origin;
+      if (name) {
+        const prev = RPC.getBridgeWindow(name) || {};
+        RPC.setBridgeWindow(name, { win: prev.win || ev.source, origin: ori, jquery: !!m.jquery });
+        if (!state.current) state.current = name;
+        setActive(state.current).then(()=> panel?.reloadYaml?.());
+        setStatus(`${state.current} — Connected${(!!m.jquery?' ($ ready)':'')}`, true);
+        log(`Connected: ${name}  ← ${m.href}`);
+      }
+    }
+    if (m.kind === 'rpc_result') rpc._dispatchResult(m);
+  });
+
+  // Init panel
+  const panel = await initPanel({
+    anchorEl: box,
+    adapter: {
+      async listSessions(){ return Object.keys(state.sessions).map(n => ({ name:n, id: state.sessions[n].id, url: state.sessions[n].url, active: n===state.current })); },
+      async getActiveSession(){ if (!state.current) return null; const r=state.sessions[state.current]; return { name:state.current, id:r.id, url:r.url, active:true }; },
+      async setActiveSession(name){ if (!state.sessions[name]) return; await setActive(name); },
+
+      async getSessionYamlByActive(){ if (!state.current) return ''; const r=state.sessions[state.current]; return String(await GM.getValue(SFILE_KEY(r.id), '')); },
+      async setSessionYamlByActive(txt){ if (!state.current) return; const r=state.sessions[state.current]; await GM.setValue(SFILE_KEY(r.id), String(txt??'')); },
+
+      async listYamlFiles(){
+        // repo + GM
+        const repoBase = TEMPLATES_BASE;
+        const repoFiles = [
+          { key:`repo:schema/components-factory.yaml`, title:'components-factory.yaml', source:'repo', url:`${repoBase}/schema/components-factory.yaml` },
+          { key:`repo:schema/workers.yaml`,            title:'workers.yaml',            source:'repo', url:`${repoBase}/schema/workers.yaml` },
+          { key:`repo:schema/utils.yaml`,              title:'utils.yaml',              source:'repo', url:`${repoBase}/schema/utils.yaml` },
+          { key:`repo:schema/layout.yaml`,             title:'layout.yaml',             source:'repo', url:`${repoBase}/schema/layout.yaml` },
+          { key:`repo:schema/init.yaml`,               title:'init.yaml',               source:'repo', url:`${repoBase}/schema/init.yaml` },
+        ];
+        const keys = await Sessions.listGMKeys();
+        const gmYaml = [];
+        for (const k of keys) if (/^(yaml:|session-.*\.yaml$)/.test(k)) gmYaml.push({ key:`gm:${k}`, title:k, source:'gm' });
+        if (state.current) {
+          const r = state.sessions[state.current];
+          gmYaml.unshift({ key:`gm:${SFILE_KEY(r.id)}`, title:`session-${r.id}.yaml`, source:'gm' });
+        }
+        return [...repoFiles, ...gmYaml];
+      },
+      async getYamlByKey(ref){
+        if (ref.startsWith('repo:')) {
+          const url = ref.replace(/^repo:/,'');
+          const u = `${TEMPLATES_BASE}/${url}`;
+          const r = await fetch(u); return await r.text();
+        }
+        if (ref.startsWith('gm:')) return String(await GM.getValue(ref.slice(3), ''));
+        return '';
+      },
+      async setYamlByKey(ref, txt){
+        if (!ref.startsWith('gm:')) return;
+        await GM.setValue(ref.slice(3), String(txt??''));
+      },
+
+      // RPC helpers
+      async getBridge(name){ return RPC.getBridgeWindow(name); },
+      async ping(name){ return rpc.call(name,'ping',{}); },
+      async getDom(name, selector){ return rpc.call(name,'getDom',{ selector }); },
+      async runJS(name, code){ return rpc.call(name,'runJS',{ code }); },
+    }
+  });
+
+  // Chat commands
+  function openSessionWindow(name){
+    const rec = state.sessions[name]; if (!rec) { log(`[FEIL] Ukjent session: ${name}`); return null; }
+    const norm = normalizeUrl(rec.url);
+    const url  = addSessionHash(norm, name);
+    const winName = 'dc_' + name;
+    const w = window.open(url, winName);
+    try { w && w.blur(); } catch {}
+    try { window.focus(); } catch {}
+    setTimeout(() => { try { window.focus(); } catch {} }, 0);
+    RPC.setBridgeWindow(name, { win:w, origin:originOf(norm), jquery:false });
+    return w;
+  }
+  const parseFlags = (s)=>{
+    const out = { del:false, newName:null, newUrl:null };
+    const pull = (L,S)=>{ let m = s.match(new RegExp(`${L}\\s+"([^"]+)"`)) || s.match(new RegExp(`${S}\\s+"([^"]+)"`)) ||
+                               s.match(new RegExp(`${L}\\s+([^\\s]+)`))    || s.match(new RegExp(`${S}\\s+([^\\s]+)`)); return m?m[1]:null; };
+    out.del = /\s(--delete|-d)(\s|$)/.test(s);
+    out.newName = pull('--navn','-n');
+    out.newUrl  = pull('--url','-u');
+    return out;
+  };
+
+  async function handle(line){
+    const cmd=(line||'').trim(); if(!cmd) return; const logLine=(m)=>log(m);
+    logLine('> '+cmd);
+    if (cmd === '/') {
+      const names = Object.keys(state.sessions);
+      if (!names.length){ logLine('Ingen sessions. Opprett: /session <navn> <url>'); return; }
+      logLine('Sessions:'); names.forEach((n,i)=> logLine(`${i+1}. ${n}${state.current===n?' *':''} — ${state.sessions[n].url}`));
+      logLine('Svar med tall (1..N) eller bruk "/<navn>".'); return;
+    }
+    if (/^\d+$/.test(cmd)) {
+      const names = Object.keys(state.sessions); const idx=parseInt(cmd,10)-1; const name=names[idx];
+      if (!name){ logLine('[FEIL] Ugyldig valg'); return; }
+      await setActive(name); setStatus(`${state.current} — Connecting…`); openSessionWindow(name);
+      await ensureSessionYamlFile(state.sessions[name], name); panel?.reloadYaml?.(); return;
+    }
+    if (cmd.startsWith('/session ')) {
+      const rest = cmd.slice(9).trim(); const parts=rest.split(/\s+/);
+      const name = parts.shift(); const urlRaw = rest.slice((name||'').length).trim();
+      if (!name || !urlRaw){ logLine('[FEIL] Bruk: /session <navn> <url>'); return; }
+      const norm = normalizeUrl(urlRaw); const id = state.sessions[name]?.id || randId();
+      state.sessions[name] = { url:norm, id }; await GM.setValue('dc_sessions_v1', JSON.stringify(state.sessions));
+      await setActive(name); setStatus(`${state.current} — Ready`); await ensureSessionYamlFile(state.sessions[name], name);
+      panel?.reloadYaml?.(); logLine(`Session lagret: ${name} → ${norm}`); return;
+    }
+    if (cmd.startsWith('/') && !cmd.startsWith('/dom') && !cmd.startsWith('/js') && !cmd.startsWith('/open')) {
+      const space = cmd.indexOf(' '); const name=(space===-1?cmd.slice(1):cmd.slice(1,space)).trim(); const args=space===-1?'':cmd.slice(space+1);
+      if (!name){ logLine('[FEIL] Mangler navn'); return; }
+      const flags = (s=>{ const out={del:false,newName:null,newUrl:null}; const pull=(L,S)=>{let m=s.match(new RegExp(`${L}\\s+"([^"]+)"`))||s.match(new RegExp(`${S}\\s+"([^"]+)"`))||s.match(new RegExp(`${L}\\s+([^\\s]+)`))||s.match(new RegExp(`${S}\\s+([^\\s]+)`));return m?m[1]:null;}; out.del=/\s(--delete|-d)(\s|$)/.test(s); out.newName=pull('--navn','-n'); out.newUrl=pull('--url','-u'); return out; })(' '+args+' ');
+      if (flags.del){ if(!state.sessions[name]){ logLine('[FEIL] Ukjent session'); return; }
+        const id = state.sessions[name].id; await GM.deleteValue(SFILE_KEY(id)); await GM.deleteValue(YAML_KEY(name)); delete state.sessions[name];
+        await GM.setValue('dc_sessions_v1', JSON.stringify(state.sessions)); if (state.current===name){ state.current=null; setStatus('No session'); }
+        RPC.clearBridge(name); logLine(`Session slettet: ${name}`); panel?.reloadYaml?.(); return; }
+      if (flags.newName){ if(!state.sessions[name]){ logLine('[FEIL] Ukjent session'); return; }
+        const newName=flags.newName.trim(); if(state.sessions[newName]){ logLine('[FEIL] Finnes allerede: '+newName); return; }
+        const rec=state.sessions[name]; state.sessions[newName]={url:rec.url,id:rec.id}; delete state.sessions[name];
+        await GM.setValue('dc_sessions_v1', JSON.stringify(state.sessions));
+        const cfg=await GM.getValue(YAML_KEY(name), ''); if(cfg){ await GM.setValue(YAML_KEY(newName), cfg); await GM.deleteValue(YAML_KEY(name)); }
+        if (state.current===name) state.current=newName; RPC.moveBridge(name,newName);
+        await setActive(state.current||newName); await ensureSessionYamlFile(state.sessions[newName], newName);
+        panel?.reloadYaml?.(); logLine(`Session navn endret: ${name} → ${newName}`); return; }
+      if (flags.newUrl){ if(!state.sessions[name]){ logLine('[FEIL] Ukjent session'); return; }
+        const norm=normalizeUrl(flags.newUrl); state.sessions[name].url=norm; await GM.setValue('dc_sessions_v1', JSON.stringify(state.sessions));
+        await ensureSessionYamlFile(state.sessions[name], name); if (state.current===name) panel?.reloadYaml?.(); logLine(`Session URL oppdatert: ${name} → ${norm}`); return; }
+      if (state.sessions[name]){ await setActive(name); setStatus(`${state.current} — Connecting…`); openSessionWindow(name);
+        await ensureSessionYamlFile(state.sessions[name], name); panel?.reloadYaml?.(); return; }
+      logLine('[FEIL] Ukjent session.'); return;
+    }
+    if (!state.current){ logLine('Ingen aktiv session. Bruk "/session <navn> <url>" eller "/" for meny.'); return; }
+    if (cmd.startsWith('/dom')){ const sel=cmd.replace(/^\/dom\s*/,'').trim()||'body'; try { const { html }=await rpc.call(state.current,'getDom',{ selector: sel }); logLine(`[DOM ${state.current} ${sel}]`); logLine(html); } catch(e){ logLine(`[FEIL] ${e?.error||e?.message||String(e)}`); } return; }
+    if (cmd.startsWith('/js')){ const code=cmd.replace(/^\/js\s*/,''); try { const { result }=await rpc.call(state.current,'runJS',{ code }); logLine(`[JS OK @ ${state.current}] ${result??'(no return)'}`); } catch(e){ logLine(`[FEIL] ${e?.error||e?.message||String(e)}`); } return; }
+    if (cmd === '/open'){ setStatus(`${state.current} — Connecting…`); openSessionWindow(state.current); return; }
+    logLine('Ukjent kommando.');
+  }
+
+  box.querySelector('#dc-open').addEventListener('click', () => { const cur=state.current; if (!cur){ log('Ingen aktiv session.'); return; } setStatus(`${cur} — Connecting…`); openSessionWindow(cur); });
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { handle(e.target.value); e.target.value=''; }});
+
+  await loadSessions();
+  if (Object.keys(state.sessions).length) setStatus('No session — press "/"');
+  else { setStatus('No session'); log('Opprett en session: /session <navn> <url>'); }
+})();
