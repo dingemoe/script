@@ -69,9 +69,9 @@ export class RenderController {
     this.container = null;
   }
 
-  async initialize(containerElement) {
+  async initialize(containerElement, vueInstance = null) {
     try {
-      this.vue = getVue();
+      this.vue = getVue(vueInstance);
       this.container = containerElement;
       
       // Import panel controllers
