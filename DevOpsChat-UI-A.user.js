@@ -88,10 +88,10 @@
   const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
   const { VueRenderer } = await import(RENDER_URL);
 
-  // Vue App Container
+  // Vue App Container (inside shadow DOM)
   const appContainer = document.createElement('div');
   appContainer.id = 'devops-chat-app';
-  document.body.appendChild(appContainer);
+  shadowRoot.appendChild(appContainer);
 
   // Initialize Modular Vue App
   console.log('🚀 Initializing modular render system...');
