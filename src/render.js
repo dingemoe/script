@@ -191,7 +191,12 @@ export const createDevOpsChatApp = () => {
 // Utility functions for external use
 export const VueRenderer = {
   createApp(container) {
-    return createApp(DevOpsChatApp).mount(container);
+    const { createApp } = getVue();
+    const app = createApp(createDevOpsChatApp());
+    const vueInstance = app.mount(container);
+    
+    // Return the mounted Vue instance for external access
+    return vueInstance;
   },
 
   // Helper methods for interacting with Vue app
@@ -203,13 +208,13 @@ export const VueRenderer = {
     app.setStatus(text, connected);
   },
 
-  setSessions(app, sessionsData) {
-    app.sessions = sessionsData;
+  updateSessions(app, sessionsData) {
+    app.updateSessions(sessionsData);
   },
 
   setCurrentSession(app, sessionName) {
-    app.currentSession = sessionName;
+    app.setCurrentSession(sessionName);
   }
 };
 
-export default { DevOpsChatApp, VueRenderer };
+export default { createDevOpsChatApp, VueRenderer };
