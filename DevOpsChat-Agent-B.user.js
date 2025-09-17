@@ -1,8 +1,13 @@
 // ==UserScript==
 // @name         DevOpsChat Agent (B) + jQuery (global)
+// @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      2
+// @version      2.1.0
 // @description  Agenten på målsiden som svarer på RPC fra UI (A).
+// @author       dingemoe
+// @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-Agent-B.user.js
+// @updateURL    https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-Agent-B.user.js
+// @supportURL   https://github.com/dingemoe/script/issues
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.7.1.min.js
 // @noframes
