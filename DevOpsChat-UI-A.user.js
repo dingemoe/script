@@ -189,6 +189,10 @@
     console.log('🔍 App container in DOM:', appContainer.isConnected);
     console.log('🔍 Shadow root children:', shadowRoot.children.length);
     
+    // Remove loading indicator
+    const loadingDiv = shadowRoot.querySelector('div');
+    if (loadingDiv) loadingDiv.remove();
+    
     // Helper functions for Vue integration
     const log = (text, type = 'normal') => VueRenderer.addLog(renderController, text, type);
     const setStatus = (text, isConnected = false) => VueRenderer.setStatus(renderController, text, isConnected);
