@@ -1,114 +1,187 @@
 /**
- * DevOpsChat Render Module
- * Handles all UI rendering and HTML template generation
+ * DevOpsChat Vue 3 + Beer CSS Render Module
+ * Modern reactive UI components
  */
 
-export const Templates = {
-  /**
-   * Creates the main chat box HTML
-   */
-  chatBox() {
-    return `
-      <div class="dc-header">
-        <strong>DevOpsChat</strong>
-        <span id="dc-status" class="dc-status">No session</span>
-        <button id="dc-open" title="Åpne/bytt til aktiv session">Open</button>
-      </div>
-      <div id="dc-log" class="dc-log"></div>
-      <div class="dc-input-section">
-        <input id="dc-input" class="dc-input" placeholder="/session <navn> <url> | / | /<navn> | /<navn> -d | /<navn> -n nytt | /<navn> -u url | /dom [sel] | /js ...">
-      </div>`;
-  },
+const { createApp, ref, computed, onMounted } = Vue;
 
-  /**
-   * Creates the dev section HTML
-   */
-  devSection() {
-    return `
-      <div class="dc-dev-header">
-        <strong>Dev Tools</strong>
-        <button class="dc-dev-toggle" title="Toggle dev tools">⚙️</button>
-      </div>
-      <div class="dc-dev-content">
-        <div>Dev Section - Ready for content</div>
-        <textarea class="dc-dev-textarea" placeholder="Enter development commands or code..."></textarea>
-      </div>`;
-  },
+// Main DevOpsChat Vue App
+export const DevOpsChatApp = {
+  setup() {
+    // Reactive state
+    const sessions = ref({});
+    const currentSession = ref(null);
+    const status = ref('No session');
+    const isConnected = ref(false);
+    const logs = ref([]);
+    const inputValue = ref('');
+    const devContent = ref('');
+    const showDevSection = ref(true);
 
-  /**
-   * Creates a log entry element
-   */
-  logEntry(text, type = 'normal') {
-    return `<div class="dc-log-entry dc-log-${type}">${text}</div>`;
-  }
-};
+    // Computed properties
+    const statusClass = computed(() => 
+      isConnected.value ? 'green white-text' : 'amber black-text'
+    );
 
-export const Renderer = {
-  /**
-   * Creates the complete UI structure
-   */
-  createUI() {
-    // Create wrapper
-    const wrapper = document.createElement('div');
-    wrapper.className = 'dc-wrapper';
-    
-    // Create chat box
-    const chatBox = document.createElement('div');
-    chatBox.className = 'dc-chat-box';
-    chatBox.innerHTML = Templates.chatBox();
-    
-    // Create dev section
-    const devSection = document.createElement('div');
-    devSection.className = 'dc-dev';
-    devSection.innerHTML = Templates.devSection();
-    
-    // Assemble structure
-    wrapper.appendChild(chatBox);
-    wrapper.appendChild(devSection);
-    
-    return {
-      wrapper,
-      chatBox,
-      devSection,
-      elements: {
-        logEl: chatBox.querySelector('#dc-log'),
-        input: chatBox.querySelector('#dc-input'),
-        status: chatBox.querySelector('#dc-status'),
-        openBtn: chatBox.querySelector('#dc-open'),
-        devContent: devSection.querySelector('.dc-dev-content'),
-        devTextarea: devSection.querySelector('.dc-dev-textarea'),
-        devToggle: devSection.querySelector('.dc-dev-toggle')
+    const sessionsList = computed(() => 
+      Object.keys(sessions.value).map(name => ({
+        name,
+        ...sessions.value[name],
+        active: name === currentSession.value
+      }))
+    );
+
+    // Methods
+    const addLog = (text, type = 'normal') => {
+      logs.value.push({
+        id: Date.now() + Math.random(),
+        text,
+        type,
+        timestamp: new Date().toLocaleTimeString()
+      });
+    };
+
+    const setStatus = (text, connected = false) => {
+      status.value = text;
+      isConnected.value = connected;
+    };
+
+    const handleCommand = (command) => {
+      if (!command.trim()) return;
+      addLog(`> ${command}`, 'command');
+      inputValue.value = '';
+      // Emit event for parent to handle
+      window.dispatchEvent(new CustomEvent('devops-command', { 
+        detail: { command } 
+      }));
+    };
+
+    const toggleDevSection = () => {
+      showDevSection.value = !showDevSection.value;
+    };
+
+    const openSession = () => {
+      if (!currentSession.value) {
+        addLog('Ingen aktiv session.', 'error');
+        return;
       }
+      setStatus(`${currentSession.value} — Connecting…`);
+      window.dispatchEvent(new CustomEvent('devops-open-session', {
+        detail: { session: currentSession.value }
+      }));
+    };
+
+    return {
+      sessions,
+      currentSession,
+      status,
+      isConnected,
+      logs,
+      inputValue,
+      devContent,
+      showDevSection,
+      statusClass,
+      sessionsList,
+      addLog,
+      setStatus,
+      handleCommand,
+      toggleDevSection,
+      openSession
     };
   },
 
-  /**
-   * Updates status with proper styling
-   */
-  setStatus(statusEl, text, isConnected = false) {
-    statusEl.textContent = text;
-    statusEl.className = isConnected ? 'dc-status connected' : 'dc-status';
+  template: `
+    <div class="fixed top right medium-width">
+      <!-- Chat Box -->
+      <article class="surface-container border round small-margin">
+        <!-- Header -->
+        <div class="padding small-space">
+          <div class="row middle-align">
+            <h6 class="bold no-margin">DevOpsChat</h6>
+            <div class="max"></div>
+            <span class="chip small" :class="statusClass">{{ status }}</span>
+            <button @click="openSession" class="circle transparent">
+              <i>open_in_new</i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Log Area -->
+        <div class="padding small-space log-container" style="height: 260px; overflow-y: auto;">
+          <div v-for="log in logs" :key="log.id" class="log-entry" :class="'log-' + log.type">
+            <small class="grey-text">{{ log.timestamp }}</small>
+            <span class="margin-left">{{ log.text }}</span>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="padding small-space border-top">
+          <div class="field border">
+            <input 
+              v-model="inputValue" 
+              @keyup.enter="handleCommand(inputValue)"
+              placeholder="/session <navn> <url> | / | /<navn> | /dom [sel] | /js ..."
+              class="transparent">
+          </div>
+        </div>
+      </article>
+
+      <!-- Dev Section -->
+      <article v-show="showDevSection" class="surface-container border round small-margin">
+        <!-- Dev Header -->
+        <div class="padding small-space border-bottom">
+          <div class="row middle-align">
+            <h6 class="bold no-margin">Dev Tools</h6>
+            <div class="max"></div>
+            <button @click="toggleDevSection" class="circle transparent">
+              <i>{{ showDevSection ? 'expand_less' : 'expand_more' }}</i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dev Content -->
+        <div class="padding small-space">
+          <p class="small-text grey-text">Development commands and tools</p>
+          <div class="field border">
+            <textarea 
+              v-model="devContent" 
+              placeholder="Enter development commands or code..."
+              rows="8"
+              class="transparent"></textarea>
+          </div>
+          <div class="row">
+            <button @click="devContent = ''" class="small grey">Clear</button>
+            <div class="max"></div>
+            <button class="small primary">Execute</button>
+          </div>
+        </div>
+      </article>
+    </div>
+  `
+};
+
+// Utility functions for external use
+export const VueRenderer = {
+  createApp(container) {
+    return createApp(DevOpsChatApp).mount(container);
   },
 
-  /**
-   * Adds a log entry to the log element
-   */
-  addLogEntry(logEl, text, type = 'normal') {
-    const entry = document.createElement('div');
-    entry.className = `dc-log-entry dc-log-${type}`;
-    entry.textContent = text;
-    logEl.appendChild(entry);
-    logEl.scrollTop = logEl.scrollHeight;
+  // Helper methods for interacting with Vue app
+  addLog(app, text, type = 'normal') {
+    app.addLog(text, type);
   },
 
-  /**
-   * Toggles dev section visibility
-   */
-  toggleDevSection(devSection) {
-    const isHidden = devSection.style.display === 'none';
-    devSection.style.display = isHidden ? 'block' : 'none';
-    return !isHidden;
+  setStatus(app, text, connected = false) {
+    app.setStatus(text, connected);
+  },
+
+  setSessions(app, sessionsData) {
+    app.sessions = sessionsData;
+  },
+
+  setCurrentSession(app, sessionName) {
+    app.currentSession = sessionName;
   }
 };
 
-export default { Templates, Renderer };
+export default { DevOpsChatApp, VueRenderer };
