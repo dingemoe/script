@@ -11,7 +11,7 @@
 // @resource     devopschat-style https://raw.githack.com/dingemoe/script/main/style/style.css
 // @resource     beer-css https://cdn.jsdelivr.net/npm/beercss@3.7.11/dist/cdn/beer.min.css
 // @resource     material-icons https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200
-// @require      https://unpkg.com/vue@3/dist/vue.global.js
+// @require      https://unpkg.com/vue@3/dist/vue.global.prod.js
 // @noframes
 // ==/UserScript==
 
