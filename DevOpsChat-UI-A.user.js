@@ -88,6 +88,21 @@
   const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
   const { VueRenderer } = await import(RENDER_URL);
 
+  // Wait for Vue to be available
+  console.log('⏳ Waiting for Vue to be available...');
+  let vueWaitCount = 0;
+  while (typeof window.Vue === 'undefined' && vueWaitCount < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    vueWaitCount++;
+  }
+  
+  if (typeof window.Vue === 'undefined') {
+    console.error('❌ Vue not loaded after 5 seconds');
+    return;
+  }
+  
+  console.log('✅ Vue is available:', window.Vue);
+
   // Vue App Container (inside shadow DOM)
   const appContainer = document.createElement('div');
   appContainer.id = 'devops-chat-app';
