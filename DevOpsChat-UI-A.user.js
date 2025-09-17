@@ -2,7 +2,7 @@
 // @name         DevOpsChat UI (A) — Vue 3 + Beer CSS Edition
 // @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      5.1.6
+// @version      5.1.8
 // @description  Modern reactive UI med Vue 3 og Beer CSS. Sessions + Panel + YAML-tab.
 // @author       dingemoe
 // @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-UI-A.user.js
@@ -27,8 +27,8 @@
 
   // Script info and modified time logging
   const SCRIPT_NAME = 'DevOpsChat UI (A) — Vue 3 + Beer CSS Edition';
-  const SCRIPT_VERSION = '5.1.6';
-  const MODIFIED_DATE = new Date('2025-09-17T23:39:19Z'); // ✅ Auto-versioned to v5.1.6 on 2025-09-17 23:39
+  const SCRIPT_VERSION = '5.1.8';
+  const MODIFIED_DATE = new Date('2025-09-17T23:40:58Z'); // ✅ Auto-versioned to v5.1.8 on 2025-09-17 23:40
   
   const getRelativeTime = (date) => {
     const now = new Date();

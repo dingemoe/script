@@ -2,7 +2,7 @@
 // @name         DevOpsChat UI (React) — React 18 + DaisyUI Edition [WITH TRACING]
 // @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      6.0.5
+// @version      6.0.7
 // @description  Modern reactive UI med React 18 og DaisyUI + Smart Tracing System
 // @author       dingemoe
 // @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-UI-React-traced.user.js
@@ -44,8 +44,8 @@
 
   // Script info med tracing
   const SCRIPT_NAME = 'DevOpsChat UI (React) — React 18 + DaisyUI Edition [TRACED]';
-  const SCRIPT_VERSION = '6.0.5';
-  const MODIFIED_DATE = new Date('2025-09-17T23:39:19Z'); // ✅ Auto-versioned to v6.0.5 on 2025-09-17 23:39
+  const SCRIPT_VERSION = '6.0.7';
+  const MODIFIED_DATE = new Date('2025-09-17T23:40:58Z'); // ✅ Auto-versioned to v6.0.7 on 2025-09-17 23:40
   
   tracer.info(`🚀 Script started: ${SCRIPT_NAME} v${SCRIPT_VERSION}`);
   
