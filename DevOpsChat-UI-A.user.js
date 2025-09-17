@@ -72,7 +72,10 @@
   const inp   = box.querySelector('#dc-input');
   const statusEl = box.querySelector('#dc-status');
   const log = (t)=>{ const d=document.createElement('div'); d.textContent=t; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; };
-  const setStatus = (text, ok=false)=>{ statusEl.textContent=text; statusEl.style.background=ok?'#c6efce':'#ffd966'; statusEl.style.color=ok?'#055a00':'#333'; };
+  const setStatus = (text, ok=false)=>{ 
+    statusEl.textContent=text; 
+    statusEl.className = ok ? 'dc-status connected' : 'dc-status';
+  };
 
   // Sessions / GM
   const STORAGE_SESSIONS = 'dc_sessions_v1';
