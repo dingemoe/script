@@ -172,7 +172,7 @@
     const log = (text, type = 'normal') => VueRenderer.addLog(renderController, text, type);
     const setStatus = (text, isConnected = false) => VueRenderer.setStatus(renderController, text, isConnected);
 
-  // Sessions / GM
+    // Sessions / GM
   const STORAGE_SESSIONS = 'dc_sessions_v1';
   const YAML_KEY = (name) => `yaml:${name}`;
   const SFILE_KEY = (id) => `session-${id}.yaml`;
