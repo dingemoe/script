@@ -73,16 +73,13 @@
   const sessionHash = window.location.hash;
   tracer.debug('🔍 Checking session hash', { hash: sessionHash });
   
-  if (!sessionHash.includes('dc_session=')) {
-    tracer.warn('⚠️ No DevOpsChat session detected in URL hash', {
-      currentHash: sessionHash,
-      expectedPattern: 'dc_session=*'
-    });
-    return;
+  let sessionId = 'default-session';
+  if (sessionHash.includes('dc_session=')) {
+    sessionId = sessionHash.split('dc_session=')[1]?.split('&')[0];
+    tracer.info('✅ DevOpsChat session detected', { sessionId });
+  } else {
+    tracer.info('ℹ️ No specific session - using default mode', { sessionId });
   }
-
-  const sessionId = sessionHash.split('dc_session=')[1]?.split('&')[0];
-  tracer.info('✅ DevOpsChat session detected', { sessionId });
 
   // =====================
   // REACT LOADING MED SMART TRACING
