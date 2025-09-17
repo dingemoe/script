@@ -384,7 +384,7 @@
   // FINAL SETUP
   // =====================
   
-  tracer.scriptReady(SCRIPT_NAME);
+  tracer.info(`🎉 Script fully initialized: ${SCRIPT_NAME}`);
   tracer.info('🎉 DevOpsChat Agent (B) with Smart Tracing fully initialized!', {
     version: SCRIPT_VERSION,
     jqueryVersion: window.jQuery?.fn?.jquery || 'not available',
