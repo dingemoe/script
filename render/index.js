@@ -77,9 +77,9 @@ export class RenderController {
       // Import panel controllers
       const { Panel1, Panel2 } = await importPanelControllers();
       
-      // Initialize panels
-      this.panels.panel1 = new Panel1.ChatPanelController();
-      this.panels.panel2 = new Panel2.DevPanelController();
+      // Initialize panels with Vue instance
+      this.panels.panel1 = new Panel1.ChatPanelController(this.vue);
+      this.panels.panel2 = new Panel2.DevPanelController(this.vue);
       
       // Create unified Vue app
       const appConfig = await this.createAppConfig();
