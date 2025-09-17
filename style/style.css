@@ -1,0 +1,63 @@
+/* DevOpsChat UI Styles */
+
+/* Main chat container */
+.dc-chat-box {
+  position: fixed;
+  z-index: 999999;
+  top: 12px;
+  right: 12px;
+  width: 380px;
+  font: 12px system-ui;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+
+/* Header section */
+.dc-header {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Status indicator */
+.dc-status {
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #ffd966;
+  color: #333;
+}
+
+.dc-status.connected {
+  background: #c6efce;
+  color: #055a00;
+}
+
+/* Log area */
+.dc-log {
+  height: 260px;
+  overflow: auto;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+}
+
+/* Input section */
+.dc-input-section {
+  border-top: 1px solid #eee;
+  padding: 8px 10px;
+}
+
+.dc-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+}
+
+/* Dev section with fixed height */
+.dc-dev {
+  height: 260px;
+}

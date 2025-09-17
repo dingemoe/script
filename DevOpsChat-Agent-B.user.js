@@ -5,9 +5,13 @@
 // @description  Agenten på målsiden som svarer på RPC fra UI (A).
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.7.1.min.js
+// @noframes
 // ==/UserScript==
 
 (() => {
+  if (window.top !== window.self) return;
+  if (window.__DEVOPSCHAT_AGENT_B__) return;
+  window.__DEVOPSCHAT_AGENT_B__ = true;
   const getSessionFromHash = () => {
     try {
       const h = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;

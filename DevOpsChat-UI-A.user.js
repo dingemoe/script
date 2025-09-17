@@ -6,9 +6,16 @@
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @grant        GM.deleteValue
+// @grant        GM_getResourceText
+// @grant        GM_addStyle
+// @resource     devopschat-style https://raw.githack.com/dingemoe/script/main/style/style.css
+// @noframes
 // ==/UserScript==
 
 (async () => {
+  if (window.top !== window.self) return;
+  if (window.__DEVOPSCHAT_UI_A__) return;
+  window.__DEVOPSCHAT_UI_A__ = true;
   const GH_USER = 'dingemoe';
   const GH_REPO = 'script';
   const CDN = (...p) => `https://raw.githack.com/${GH_USER}/${GH_REPO}/${p.join('/')}`;
@@ -40,7 +47,7 @@
 
   // Chat UI
   const box = document.createElement('div');
-  box.style = 'position:fixed;z-index:999999;bottom:12px;right:12px;width:380px;font:12px system-ui;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.15);';
+  box.style = 'position:fixed;z-index:999999;top:12px;right:12px;width:380px;font:12px system-ui;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.15);';
   box.innerHTML = `
     <div style="padding:8px 10px;border-bottom:1px solid #eee;display:flex;gap:8px;align-items:center">
       <strong>DevOpsChat</strong>
