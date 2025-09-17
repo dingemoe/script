@@ -390,4 +390,9 @@ workers:
     setStatus('No session'); 
     log('Opprett en session: /session <navn> <url>'); 
   }
+
+  } catch (error) {
+    console.error('❌ DevOpsChat: Critical initialization error:', error);
+    alert(`❌ DevOpsChat failed to initialize: ${error.message}`);
+  }
 })();
