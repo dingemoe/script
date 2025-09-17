@@ -45,7 +45,7 @@
   // Script info med tracing
   const SCRIPT_NAME = 'DevOpsChat UI (React) — React 18 + DaisyUI Edition [TRACED]';
   const SCRIPT_VERSION = '6.0.1';
-  const MODIFIED_DATE = new Date('2025-09-17T23:25:00Z'); // ✅ New React version with DaisyUI
+  const MODIFIED_DATE = new Date('2025-09-17T23:31:48Z'); // ✅ Fixed session check + removed Vue monitoring
   
   tracer.info(`🚀 Script started: ${SCRIPT_NAME} v${SCRIPT_VERSION}`);
   
