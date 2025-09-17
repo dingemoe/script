@@ -2,7 +2,7 @@
 // @name         DevOpsChat Agent (B) + jQuery [WITH TRACING]
 // @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      2.2.0
+// @version      2.2.1
 // @description  RPC Agent på målsiden + Smart Tracing System
 // @author       dingemoe
 // @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-Agent-B-traced.user.js
