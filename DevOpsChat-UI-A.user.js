@@ -64,18 +64,19 @@
   const Sessions = await import(CORE_SESSIONS_URL);
   const RPC = await import(CORE_RPC_URL);
   const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
-  const { Renderer } = await import(RENDER_URL);
+  const { VueRenderer } = await import(RENDER_URL);
 
-  // Chat UI - Using Renderer module
-  const ui = Renderer.createUI();
-  document.body.appendChild(ui.wrapper);
+  // Vue App Container
+  const appContainer = document.createElement('div');
+  appContainer.id = 'devops-chat-app';
+  document.body.appendChild(appContainer);
+
+  // Initialize Vue App
+  const vueApp = VueRenderer.createApp(appContainer);
   
-  // Extract elements for easy access
-  const { logEl, input: inp, status: statusEl, openBtn } = ui.elements;
-  
-  // Helper functions
-  const log = (text, type = 'normal') => Renderer.addLogEntry(logEl, text, type);
-  const setStatus = (text, isConnected = false) => Renderer.setStatus(statusEl, text, isConnected);
+  // Helper functions for Vue integration
+  const log = (text, type = 'normal') => vueApp.addLog(text, type);
+  const setStatus = (text, isConnected = false) => vueApp.setStatus(text, isConnected);
 
   // Sessions / GM
   const STORAGE_SESSIONS = 'dc_sessions_v1';
