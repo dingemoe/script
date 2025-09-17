@@ -256,7 +256,7 @@ class DevOpsChatTracing {
             'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js',
             'https://unpkg.com/vue@3/dist/vue.global.prod.js',
             'https://code.jquery.com/jquery-3.6.0.min.js',
-            'https://cdn.beercss.com/beer.min.css'
+            'https://cdn.jsdelivr.net/npm/beercss@3.7.11/dist/cdn/beer.min.css'
         ];
 
         cdnUrls.forEach(url => {
