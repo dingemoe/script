@@ -20,17 +20,39 @@
   if (window.__DEVOPSCHAT_UI_A__) return;
   window.__DEVOPSCHAT_UI_A__ = true;
 
-  // Load CSS resources
+  // Create Shadow DOM container to isolate styles
+  const shadowHost = document.createElement('div');
+  shadowHost.id = 'devops-chat-shadow-host';
+  shadowHost.style.cssText = 'position: fixed; top: 0; left: 0; z-index: 2147483647; pointer-events: none;';
+  document.body.appendChild(shadowHost);
+  
+  const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
+  
+  // Load CSS resources into shadow DOM
   try {
     const beerCSS = GM_getResourceText('beer-css');
     const materialIcons = GM_getResourceText('material-icons');
     const customCSS = GM_getResourceText('devopschat-style');
     
-    GM_addStyle(beerCSS);
-    GM_addStyle(materialIcons);
-    GM_addStyle(customCSS);
+    // Create style elements for shadow DOM
+    const beerStyle = document.createElement('style');
+    beerStyle.textContent = beerCSS;
+    shadowRoot.appendChild(beerStyle);
     
-    console.log('✅ DevOpsChat: CSS resources loaded successfully');
+    const iconsStyle = document.createElement('style');
+    iconsStyle.textContent = materialIcons;
+    shadowRoot.appendChild(iconsStyle);
+    
+    const customStyle = document.createElement('style');
+    customStyle.textContent = customCSS + `
+      /* Ensure pointer events work for our UI */
+      #devops-chat-app {
+        pointer-events: auto;
+      }
+    `;
+    shadowRoot.appendChild(customStyle);
+    
+    console.log('✅ DevOpsChat: CSS resources loaded in isolated shadow DOM');
   } catch (e) {
     console.warn('⚠️ DevOpsChat: Failed to load CSS resources:', e);
   }
