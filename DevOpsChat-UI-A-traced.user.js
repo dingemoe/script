@@ -294,7 +294,7 @@
           vueVersion: window.Vue.version,
           uptime: 0,
           errorCount: 0,
-          cdnStatus: '${availableCDNs}/${totalCDNs}',
+          cdnStatus: `${availableCDNs}/${totalCDNs}`,
           memoryUsage: 'Calculating...',
           debugOutput: ''
         };
