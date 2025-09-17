@@ -48,6 +48,13 @@
   console.log(`📅 Modified: ${MODIFIED_DATE.toLocaleDateString('nb-NO')} ${MODIFIED_DATE.toLocaleTimeString('nb-NO')} (${getRelativeTime(MODIFIED_DATE)})`);
   console.log('---');
 
+  // Immediate Vue availability check
+  if (typeof window.Vue !== 'undefined') {
+    console.log('✅ Vue already available at script start!', window.Vue.version || 'version unknown');
+  } else {
+    console.log('⚠️ Vue not immediately available - will wait/fallback');
+  }
+
   // Create Shadow DOM container to isolate styles
   const shadowHost = document.createElement('div');
   shadowHost.id = 'devops-chat-shadow-host';
