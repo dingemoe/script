@@ -31,12 +31,42 @@
             document.head.appendChild(style);
         },
         
+        // --- Hjelpefunksjoner for lagring ---
+        set: function(key, value) {
+            if (typeof GM_setValue !== 'undefined') {
+                try {
+                    GM_setValue(key, JSON.stringify(value));
+                } catch (e) {
+                    console.error('MyUtils: Feil ved lagring av verdi', e);
+                }
+            }
+        },
+
+        get: function(key, defaultValue) {
+            if (typeof GM_getValue === 'undefined') {
+                return defaultValue;
+            }
+            try {
+                const value = GM_getValue(key, null);
+                return value !== null ? JSON.parse(value) : defaultValue;
+            } catch (e) {
+                console.error('MyUtils: Feil ved henting av lagret verdi', e);
+                return defaultValue;
+            }
+        },
+        
+        getAndIncrement: function(key) {
+            const currentValue = this.get(key, 0);
+            this.set(key, currentValue + 1);
+            return currentValue;
+        },
+        
         // Kanal-administrasjon
         createChannel: function(channelName, options = {}) {
             const defaults = {
                 persistent: true,
                 maxMessages: 100,
-                ttl: 300000, // 5 minutter
+                ttl: 300000,
                 autoCleanup: true,
                 description: '',
                 subscribers: []
@@ -48,9 +78,8 @@
                 lastActivity: Date.now()
             });
             
-            // Lagre kanal-konfigurasjonen
             if (typeof GM_setValue !== 'undefined') {
-                GM_setValue(`channel_config_${channelName}`, JSON.stringify(config));
+                this.set(`channel_config_${channelName}`, config);
             }
             
             MyUtils.log(`Kanal opprettet: ${channelName}`, config);
@@ -61,10 +90,8 @@
             if (typeof GM_deleteValue === 'undefined') return false;
             
             try {
-                // Slett kanal-konfigurasjonen
                 GM_deleteValue(`channel_config_${channelName}`);
                 
-                // Slett alle meldinger i kanalen
                 if (typeof GM_listValues !== 'undefined') {
                     const keys = GM_listValues().filter(key => 
                         key.startsWith(`msg_${channelName}_`) || 
@@ -73,7 +100,6 @@
                     keys.forEach(key => GM_deleteValue(key));
                 }
                 
-                // Lukk aktive listeners
                 if (window.MyUtils._listeners && window.MyUtils._listeners[channelName]) {
                     const listener = window.MyUtils._listeners[channelName];
                     if (listener._bc) listener._bc.close();
@@ -95,10 +121,9 @@
             try {
                 const channelKeys = GM_listValues().filter(key => key.startsWith('channel_config_'));
                 return channelKeys.map(key => {
-                    const config = JSON.parse(GM_getValue(key, '{}'));
+                    const config = this.get(key, {});
                     const channelName = key.replace('channel_config_', '');
                     
-                    // Räkna meddelanden i kanalen
                     const messageKeys = GM_listValues().filter(k => k.startsWith(`msg_${channelName}_`));
                     
                     return {
@@ -124,8 +149,7 @@
             }
             
             try {
-                const configData = GM_getValue(`channel_config_${channelName}`, '{}');
-                const config = JSON.parse(configData);
+                const config = this.get(`channel_config_${channelName}`, {});
                 
                 const subscriber = {
                     id: Math.random().toString(36).substr(2, 9),
@@ -137,14 +161,13 @@
                 };
                 
                 config.subscribers = config.subscribers || [];
-                // Fjern gamle subscribers fra samme side
                 config.subscribers = config.subscribers.filter(s => 
                     s.hostname !== subscriber.hostname || s.pathname !== subscriber.pathname
                 );
                 config.subscribers.push(subscriber);
                 config.lastActivity = Date.now();
                 
-                GM_setValue(`channel_config_${channelName}`, JSON.stringify(config));
+                this.set(`channel_config_${channelName}`, config);
                 MyUtils.log(`Abonnert på kanal: ${channelName}`, subscriber);
                 
                 return subscriber.id;
@@ -158,13 +181,12 @@
             if (!this.channelExists(channelName)) return false;
             
             try {
-                const configData = GM_getValue(`channel_config_${channelName}`, '{}');
-                const config = JSON.parse(configData);
+                const config = this.get(`channel_config_${channelName}`, {});
                 
                 config.subscribers = (config.subscribers || []).filter(s => s.id !== subscriberId);
                 config.lastActivity = Date.now();
                 
-                GM_setValue(`channel_config_${channelName}`, JSON.stringify(config));
+                this.set(`channel_config_${channelName}`, config);
                 MyUtils.log(`Avmeldt fra kanal: ${channelName}`);
                 
                 return true;
@@ -178,16 +200,14 @@
             if (!this.channelExists(channelName)) return null;
             
             try {
-                const configData = GM_getValue(`channel_config_${channelName}`, '{}');
-                const config = JSON.parse(configData);
+                const config = this.get(`channel_config_${channelName}`, {});
                 
-                // Räkna meddelanden
                 const messageKeys = GM_listValues().filter(key => key.startsWith(`msg_${channelName}_`));
                 
                 return {
                     ...config,
                     messageCount: messageKeys.length,
-                    isActive: (Date.now() - config.lastActivity) < 60000 // Aktiv inom 1 minut
+                    isActive: (Date.now() - config.lastActivity) < 60000
                 };
             } catch (error) {
                 console.error('Feil ved henting av kanalinformasjon:', error);
@@ -197,7 +217,6 @@
         
         // Kommunikasjonsfunksjoner
         sendMessage: function(channel, data) {
-            // Opprett kanal automatisk hvis den ikke finnes
             if (!this.channelExists(channel)) {
                 this.createChannel(channel);
             }
@@ -211,39 +230,30 @@
             };
             
             try {
-                // Hämta kanal-konfiguration
                 const channelInfo = this.getChannelInfo(channel);
                 if (channelInfo && channelInfo.maxMessages) {
-                    // Begränsa antal meddelanden per kanal
                     const messageKeys = GM_listValues().filter(key => key.startsWith(`msg_${channel}_`));
                     if (messageKeys.length >= channelInfo.maxMessages) {
-                        // Ta bort äldsta meddelanden
                         const messages = messageKeys.map(key => {
                             const msg = JSON.parse(GM_getValue(key, '{}'));
                             return { key, timestamp: msg.timestamp };
                         }).sort((a, b) => a.timestamp - b.timestamp);
                         
-                        // Ta bort äldsta meddelanden
                         const toDelete = messages.slice(0, Math.max(1, messageKeys.length - channelInfo.maxMessages + 1));
                         toDelete.forEach(item => GM_deleteValue(item.key));
                     }
                 }
                 
-                // Primær: GM_setValue for cross-tab kommunikasjon
                 if (typeof GM_setValue !== 'undefined') {
-                    GM_setValue(`msg_${channel}_${message.id}`, JSON.stringify(message));
+                    this.set(`msg_${channel}_${message.id}`, message);
                     
-                    // Oppdater kanal-aktivitet
-                    const configData = GM_getValue(`channel_config_${channel}`, '{}');
-                    const config = JSON.parse(configData);
+                    const config = this.get(`channel_config_${channel}`, {});
                     config.lastActivity = Date.now();
-                    GM_setValue(`channel_config_${channel}`, JSON.stringify(config));
+                    this.set(`channel_config_${channel}`, config);
                     
-                    // Rydd opp gamle meldinger
                     this.cleanupOldMessages(channel);
                 }
                 
-                // Sekundær: BroadcastChannel for live tabs
                 if (typeof BroadcastChannel !== 'undefined') {
                     const bc = new BroadcastChannel(channel);
                     bc.postMessage(message);
@@ -263,7 +273,6 @@
             if (!listeners[channel]) {
                 listeners[channel] = [];
                 
-                // BroadcastChannel listener
                 if (typeof BroadcastChannel !== 'undefined') {
                     const bc = new BroadcastChannel(channel);
                     bc.onmessage = (event) => {
@@ -278,7 +287,6 @@
                     listeners[channel]._bc = bc;
                 }
                 
-                // GM storage polling
                 if (typeof GM_listValues !== 'undefined') {
                     const pollInterval = setInterval(() => {
                         try {
@@ -309,14 +317,12 @@
             
             listeners[channel].push(callback);
             
-            // Returner cleanup funksjon
             return () => {
                 const index = listeners[channel].indexOf(callback);
                 if (index > -1) {
                     listeners[channel].splice(index, 1);
                 }
                 
-                // Rydd opp hvis ingen lyttere igjen
                 if (listeners[channel].length === 0) {
                     if (listeners[channel]._bc) {
                         listeners[channel]._bc.close();
@@ -346,7 +352,6 @@
                                 GM_deleteValue(key);
                             }
                         } catch (e) {
-                            // Ugyldig JSON, slett
                             GM_deleteValue(key);
                         }
                     }
@@ -356,7 +361,6 @@
             }
         },
         
-        // Hjelpefunksjoner
         createElement: function(tag, attributes = {}, textContent = '') {
             const element = document.createElement(tag);
             
@@ -387,20 +391,17 @@
             };
         },
         
-        // Logging med timestamp
         log: function(...args) {
             console.log(`[${new Date().toISOString()}] [MyUtils]`, ...args);
         }
     };
     
-    // Predefiner noen vanlige kanaler med konfigurasjoner
     window.channels = {
         GLOBAL: 'global',
         NAVIGATION: 'navigation', 
         DATA_SYNC: 'data_sync',
         USER_ACTION: 'user_action',
         
-        // Hjelpefunksjoner for kanaler
         create: function(name, options) {
             return window.MyUtils.createChannel(name, options);
         },
@@ -414,7 +415,6 @@
         }
     };
     
-    // Automatisk opprettelse av standard-kanaler ved oppstart
     if (typeof GM_setValue !== 'undefined') {
         setTimeout(() => {
             const standardChannels = {
@@ -448,7 +448,6 @@
         }, 100);
     }
     
-    // Automatisk opprydding ved page unload
     window.addEventListener('beforeunload', () => {
         if (window.MyUtils._listeners) {
             Object.keys(window.MyUtils._listeners).forEach(channel => {

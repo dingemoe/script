@@ -1,33 +1,46 @@
 /*
 * chat-client.js
 *
-* UI-klient for MyUtils chat-funksjonalitet.
-* Brukes i et Tampermonkey-script sammen med common.js.
+* UI-klient for MyUtils chat-funksjonalitet med forbedret sesjonsstyring.
+* Henter userscript-signatur fra window.myChatSignature.
 */
 
 (function() {
     'use strict';
 
-    // Sjekk at MyUtils er tilgjengelig før vi fortsetter
     if (typeof window.MyUtils === 'undefined') {
-        console.error('MyUtils-biblioteket er ikke lastet. Vennligst sjekk @require-direktivet.');
+        console.error('MyUtils-biblioteket er ikke lastet.');
         return;
     }
 
+    // Henter den unike signaturen fra userscriptet
+    const SCRIPT_NAME = window.myChatSignature || 'default_chat_client';
+    const CLIENT_ID = SCRIPT_NAME.replace(/\s/g, '_').toLowerCase();
+
     const { MyUtils } = window;
 
-    // --- Konfigurasjon og UI-elementer ---
+    // --- Konfigurasjon og tilstand ---
     const config = {
         defaultChannel: 'global',
-        uiId: 'myutils-chat-client',
-        commandPrefix: '/MyUtils',
+        uiId: `myutils-chat-client-${CLIENT_ID}`,
+        commandPrefix: '/',
     };
 
-    let currentChannel = config.defaultChannel;
+    let state = {
+        currentChannel: MyUtils.get(`state_channel_${CLIENT_ID}`, config.defaultChannel),
+        currentMode: 'chat', // 'chat', 'menu', 'param-input', 'channel-select'
+        currentMenu: null,
+    };
+    const activeListeners = {};
+    
+    // --- Hjelpefunksjoner for tilstandsbevaring ---
+    function saveState() {
+        MyUtils.set(`state_channel_${CLIENT_ID}`, state.currentChannel);
+    }
+    window.addEventListener('beforeunload', saveState);
 
     // --- UI-funksjoner ---
     function createChatUI() {
-        // Legg til grunnleggende CSS for et moderne utseende
         MyUtils.addCSS(`
             #${config.uiId} {
                 position: fixed;
@@ -46,13 +59,8 @@
                 transition: transform 0.3s ease-in-out;
                 transform: translateX(calc(100% + 10px));
             }
-            #${config.uiId}.open {
-                transform: translateX(0);
-            }
-            #${config.uiId} * {
-                box-sizing: border-box;
-            }
-            #myutils-chat-toggle {
+            #${config.uiId}.open { transform: translateX(0); }
+            #myutils-chat-toggle-${CLIENT_ID} {
                 position: fixed;
                 bottom: 20px;
                 right: 20px;
@@ -69,7 +77,7 @@
                 cursor: pointer;
                 z-index: 100000;
             }
-            #myutils-chat-header {
+            #myutils-chat-header-${CLIENT_ID} {
                 padding: 15px;
                 background-color: #23272a;
                 border-top-left-radius: 10px;
@@ -79,17 +87,9 @@
                 align-items: center;
                 cursor: grab;
             }
-            #myutils-chat-header h3 {
-                margin: 0;
-                font-size: 16px;
-                color: #fff;
-            }
-            #myutils-chat-header .channel-name {
-                font-size: 14px;
-                color: #b9bbbe;
-                font-style: italic;
-            }
-            #myutils-chat-log {
+            #myutils-chat-header-${CLIENT_ID} h3 { margin: 0; font-size: 16px; color: #fff; }
+            #myutils-chat-header-${CLIENT_ID} .channel-name { font-size: 14px; color: #b9bbbe; font-style: italic; }
+            #myutils-chat-log-${CLIENT_ID} {
                 flex-grow: 1;
                 overflow-y: auto;
                 padding: 10px;
@@ -97,34 +97,12 @@
                 flex-direction: column;
                 gap: 8px;
             }
-            #myutils-chat-log::-webkit-scrollbar {
-                width: 8px;
-            }
-            #myutils-chat-log::-webkit-scrollbar-thumb {
-                background-color: #4f545c;
-                border-radius: 4px;
-            }
-            #myutils-chat-log .message {
-                background-color: #36393e;
-                padding: 8px 12px;
-                border-radius: 8px;
-                line-height: 1.4;
-            }
-            #myutils-chat-log .message .timestamp {
-                font-size: 10px;
-                color: #72767d;
-                float: right;
-            }
-            #myutils-chat-log .message .sender {
-                font-weight: bold;
-                color: #7289da;
-                margin-right: 5px;
-            }
-            #myutils-chat-input-container {
-                padding: 10px;
-                border-top: 1px solid #4f545c;
-            }
-            #myutils-chat-input {
+            #myutils-chat-log-${CLIENT_ID} .message { background-color: #36393e; padding: 8px 12px; border-radius: 8px; line-height: 1.4; }
+            #myutils-chat-log-${CLIENT_ID} .message .timestamp { font-size: 10px; color: #72767d; float: right; }
+            #myutils-chat-log-${CLIENT_ID} .message .sender { font-weight: bold; color: #7289da; margin-right: 5px; }
+            #myutils-chat-log-${CLIENT_ID} .system { color: #f4d03f; font-weight: bold; }
+            #myutils-chat-input-container-${CLIENT_ID} { padding: 10px; border-top: 1px solid #4f545c; }
+            #myutils-chat-input-${CLIENT_ID} {
                 width: 100%;
                 padding: 10px 12px;
                 border-radius: 5px;
@@ -134,45 +112,37 @@
                 font-size: 14px;
                 outline: none;
             }
-            #myutils-chat-input::placeholder {
-                color: #72767d;
-            }
         `);
 
-        // Hoved-UI container
         const chatContainer = MyUtils.createElement('div', { id: config.uiId });
         document.body.appendChild(chatContainer);
-
-        // Knapp for å vise/skjule
-        const toggleBtn = MyUtils.createElement('div', { id: 'myutils-chat-toggle', title: 'Åpne chat' }, '💬');
+        const toggleBtn = MyUtils.createElement('div', { id: `myutils-chat-toggle-${CLIENT_ID}`, title: 'Åpne chat' }, '💬');
         document.body.appendChild(toggleBtn);
 
-        const header = MyUtils.createElement('div', { id: 'myutils-chat-header' });
-        header.innerHTML = `
-            <h3>MyUtils Chat</h3>
-            <span class="channel-name" id="myutils-channel-name">#${currentChannel}</span>
-        `;
+        const header = MyUtils.createElement('div', { id: `myutils-chat-header-${CLIENT_ID}` });
+        header.innerHTML = `<h3>MyUtils Chat</h3><span class="channel-name" id="myutils-channel-name-${CLIENT_ID}">#${state.currentChannel}</span>`;
         chatContainer.appendChild(header);
 
-        const chatLog = MyUtils.createElement('div', { id: 'myutils-chat-log' });
+        const chatLog = MyUtils.createElement('div', { id: `myutils-chat-log-${CLIENT_ID}` });
         chatContainer.appendChild(chatLog);
 
-        const inputContainer = MyUtils.createElement('div', { id: 'myutils-chat-input-container' });
+        const inputContainer = MyUtils.createElement('div', { id: `myutils-chat-input-container-${CLIENT_ID}` });
         const inputField = MyUtils.createElement('input', {
-            id: 'myutils-chat-input',
+            id: `myutils-chat-input-${CLIENT_ID}`,
             type: 'text',
-            placeholder: `Skriv en melding eller kommando (${config.commandPrefix} ...)`
+            placeholder: `Skriv en melding eller kommando (${config.commandPrefix}menu for meny)`
         });
         inputContainer.appendChild(inputField);
         chatContainer.appendChild(inputContainer);
 
-        // Gjør UI-et flyttbart
         makeDraggable(chatContainer, header);
 
-        // Hendelseslyttere
         toggleBtn.addEventListener('click', () => {
             chatContainer.classList.toggle('open');
             toggleBtn.textContent = chatContainer.classList.contains('open') ? '❌' : '💬';
+            if (chatContainer.classList.contains('open')) {
+                inputField.focus();
+            }
         });
 
         inputField.addEventListener('keypress', (e) => {
@@ -185,165 +155,277 @@
             }
         });
 
-        // Abonnér på standardkanalen
-        MyUtils.onMessage(currentChannel, handleIncomingMessage);
+        // Abonnér på standardkanalen ved start
+        switchChannel(state.currentChannel);
     }
-
-    // Funksjon for å håndtere brukerinput (kommandoer eller meldinger)
+    
+    // Kommandomapping for snarveier
+    const commandMap = {
+        'create': { cmd: 'createChannel', description: 'Lag ny kanal', flags: { '-d': 'description', '-m': 'maxMessages', '-p': 'persistent' }, params: ['channelName'] },
+        'join': { cmd: 'joinChannel', description: 'Koble til kanal', params: ['channelName'] },
+        'list': { cmd: 'listChannels', description: 'Vis alle kanaler' },
+        'delete': { cmd: 'deleteChannel', description: 'Slett kanal', params: ['channelName'] },
+        'switch': { cmd: 'switchActiveChannel', description: 'Bytt aktiv kanal' }
+    };
+    
+    // --- Hovedlogikk for input og kommandoer ---
     function handleInput(text) {
-        if (text.startsWith(config.commandPrefix)) {
-            // Håndter kommandoer
+        if (state.currentMode === 'channel-select') {
+            handleChannelSelection(text);
+        } else if (state.currentMode === 'param-input') {
+            handleParamInput(text);
+        } else if (text.startsWith(config.commandPrefix)) {
             handleCommand(text.substring(config.commandPrefix.length).trim());
         } else {
-            // Send melding til gjeldende kanal
-            MyUtils.sendMessage(currentChannel, {
+            MyUtils.sendMessage(state.currentChannel, {
                 text: text,
-                from: window.location.hostname
+                from: SCRIPT_NAME,
+                messageId: MyUtils.getAndIncrement(`message_counter_${CLIENT_ID}`)
             });
         }
     }
-
-    // Funksjon for å håndtere MyUtils-kommandoer
+    
     function handleCommand(command) {
-        const parts = command.match(/(?:[^\s"]+|"[^"]*")+/g).map(p => p.replace(/"/g, ''));
+        if (command === 'menu') {
+            displayMenu();
+            return;
+        }
+        const parts = command.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
         const cmd = parts[0];
-        const args = parts.slice(1);
-
+        const args = parts.slice(1).map(p => p.replace(/"/g, ''));
+        const commandInfo = commandMap[cmd];
+        if (!commandInfo) {
+            appendSystemMessage(`Ukjent kommando: "${cmd}". Skriv /menu for å se alternativer.`, '❓');
+            return;
+        }
+        if (commandInfo.cmd === 'switchActiveChannel') {
+            displayChannelSelectionMenu();
+        } else if (commandInfo.params || commandInfo.flags) {
+            handleParamCommand(commandInfo, args);
+        } else {
+            executeCommand(commandInfo.cmd);
+        }
+    }
+    
+    function handleParamCommand(commandInfo, args) {
+        const flags = args.filter(arg => arg.startsWith('-'));
+        const params = args.filter(arg => !arg.startsWith('-'));
+        const parsedFlags = parseFlags(flags, commandInfo.flags);
+        if (commandInfo.params && params.length < commandInfo.params.length) {
+            let promptText = `Mangler parametere for **${commandInfo.cmd}**.`;
+            promptText += `<br>Bruk: ${commandInfo.params.join(', ')}`;
+            if (commandInfo.flags) {
+                const flagList = Object.keys(commandInfo.flags).map(key => `${key} (${commandInfo.flags[key]})`).join(', ');
+                promptText += `<br>Valg: ${flagList}`;
+            }
+            appendSystemMessage(promptText, '⚠️');
+            return;
+        }
+        executeCommand(commandInfo.cmd, params, parsedFlags);
+    }
+    
+    function executeCommand(cmd, params = [], flags = {}) {
         switch (cmd) {
             case 'createChannel':
-                if (args.length < 1) {
-                    appendSystemMessage(`Bruk: ${config.commandPrefix} createChannel "kanalnavn" --description "..." --persistent`);
-                    return;
-                }
-                const channelName = args[0];
-                const options = parseFlags(args.slice(1));
-                MyUtils.createChannel(channelName, options);
-                appendSystemMessage(`Kanal '${channelName}' opprettet med følgende konfigurasjon: ${JSON.stringify(options)}`);
+                MyUtils.createChannel(params[0], flags);
+                appendSystemMessage(`Kanal '${params[0]}' opprettet.`, '✅');
                 break;
             case 'joinChannel':
-                if (args.length < 1) {
-                    appendSystemMessage(`Bruk: ${config.commandPrefix} joinChannel "kanalnavn"`);
+                if (params.length < 1) {
+                    appendSystemMessage(`Bruk: ${config.commandPrefix}join "kanalnavn"`, '⚠️');
                     return;
                 }
-                const newChannel = args[0];
-                if (MyUtils.channelExists(newChannel)) {
-                    switchChannel(newChannel);
-                } else {
-                    appendSystemMessage(`Kanal '${newChannel}' finnes ikke. Oppretter en ny.`);
-                    MyUtils.createChannel(newChannel);
-                    switchChannel(newChannel);
-                }
-                break;
-            case 'sendMessage':
-                if (args.length < 2) {
-                    appendSystemMessage(`Bruk: ${config.commandPrefix} sendMessage "kanal" "melding"`);
-                    return;
-                }
-                const msgChannel = args[0];
-                const messageText = args[1];
-                MyUtils.sendMessage(msgChannel, { text: messageText, from: 'ChatUI' });
-                appendSystemMessage(`Melding sendt til ${msgChannel}.`);
+                switchChannel(params[0]);
                 break;
             case 'listChannels':
                 const channels = MyUtils.listChannels();
-                const list = channels.map(c => `**${c.name}** (${c.messageCount} meldinger) - *${c.description || 'Ingen beskrivelse'}*`).join('\n');
-                appendSystemMessage(`Tilgjengelige kanaler:\n${list}`);
+                const list = channels.map(c => `**${c.name}** (${c.messageCount} meldinger) - *${c.description || 'Ingen beskrivelse'}*`).join('<br>');
+                appendSystemMessage(`Tilgjengelige kanaler:<br>${list}`);
                 break;
             case 'deleteChannel':
-                if (args.length < 1) {
-                    appendSystemMessage(`Bruk: ${config.commandPrefix} deleteChannel "kanalnavn"`);
+                if (params.length < 1) {
+                    appendSystemMessage(`Bruk: ${config.commandPrefix}delete "kanalnavn"`, '⚠️');
                     return;
                 }
-                const channelToDelete = args[0];
+                const channelToDelete = params[0];
                 if (MyUtils.deleteChannel(channelToDelete)) {
-                    appendSystemMessage(`Kanal '${channelToDelete}' er slettet.`);
-                    if (currentChannel === channelToDelete) {
+                    appendSystemMessage(`Kanal '${channelToDelete}' er slettet.`, '🗑️');
+                    if (state.currentChannel === channelToDelete) {
                         switchChannel(config.defaultChannel);
                     }
                 } else {
-                    appendSystemMessage(`Klarte ikke å slette kanalen '${channelToDelete}'.`);
+                    appendSystemMessage(`Klarte ikke å slette kanalen '${channelToDelete}'.`, '❌');
                 }
                 break;
+            case 'switchActiveChannel':
+                displayChannelSelectionMenu();
+                break;
             default:
-                appendSystemMessage(`Ukjent kommando: "${cmd}".`);
+                appendSystemMessage(`Ukjent kommando: "${cmd}".`, '❓');
                 break;
         }
     }
 
-    // Funksjon for å bytte kanal
-    function switchChannel(channelName) {
-        if (currentChannel === channelName) return;
+    // --- Menylogikk ---
+    function displayMenu() {
+        const menuOptions = Object.keys(commandMap).map((key, index) => {
+            const command = commandMap[key];
+            return `${index + 1}. **${command.cmd}** - ${command.description}`;
+        });
 
-        // Avmelde fra forrige kanal-lytter
-        if (MyUtils._listeners && MyUtils._listeners[currentChannel]) {
-            // Note: onMessage returnerer en cleanup-funksjon, så vi kan bruke den.
-            // Men i dette tilfellet er det mer effektivt å bare håndtere det via UI-et
-            // uten å kalle `onMessage` på nytt, men heller stoppe den eksisterende lytteren.
-            // Siden common.js ikke eksponerer en enkel måte å "avmelde" en spesifikk callback,
-            // kan vi for enkelhetens skyld bare bytte variabelen og lytte på den nye.
-        }
-
-        currentChannel = channelName;
-        document.getElementById('myutils-channel-name').textContent = `#${currentChannel}`;
-        document.getElementById('myutils-chat-log').innerHTML = ''; // Tøm chatloggen
-        appendSystemMessage(`Byttet til kanal: **${currentChannel}**.`);
-        
-        // Start ny lytter for den nye kanalen
-        MyUtils.onMessage(currentChannel, handleIncomingMessage);
+        state.currentMenu = Object.keys(commandMap);
+        state.currentMode = 'menu';
+        appendSystemMessage(`**Meny**<br>${menuOptions.join('<br>')}<br>Skriv nummeret på valget ditt.`, '📝');
     }
 
-    // Funksjon for å håndtere innkommende meldinger
+    function handleMenuSelection(selection) {
+        const index = parseInt(selection, 10) - 1;
+        if (isNaN(index) || index < 0 || index >= state.currentMenu.length) {
+            appendSystemMessage('Ugyldig valg. Vennligst skriv et nummer fra menyen.', '❌');
+            return;
+        }
+
+        const commandKey = state.currentMenu[index];
+        const commandInfo = commandMap[commandKey];
+        state.currentMode = 'chat';
+        
+        if (commandInfo.cmd === 'switchActiveChannel') {
+            displayChannelSelectionMenu();
+        } else if (commandInfo.params || commandInfo.flags) {
+            let promptText = `Skriv inn parametere for **${commandInfo.cmd}**`;
+            if (commandInfo.params) {
+                promptText += `: ${commandInfo.params.join(', ')}`;
+            }
+            if (commandInfo.flags) {
+                const flagList = Object.keys(commandInfo.flags).map(key => `${key} (${commandInfo.flags[key]})`).join(', ');
+                promptText += `<br>Valg: ${flagList}`;
+            }
+            appendSystemMessage(promptText, '👉');
+            document.getElementById(`myutils-chat-input-${CLIENT_ID}`).placeholder = `Skriv inn verdier for ${commandInfo.cmd}...`;
+            
+            state.currentMode = 'param-input';
+            state.currentMenu = commandInfo.cmd;
+        } else {
+            executeCommand(commandInfo.cmd);
+        }
+    }
+
+    function handleParamInput(text) {
+        const cmd = state.currentMenu;
+        const commandInfo = commandMap[Object.keys(commandMap).find(key => commandMap[key].cmd === cmd)];
+        const parts = text.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+        const args = parts.map(p => p.replace(/"/g, ''));
+        
+        state.currentMode = 'chat';
+        document.getElementById(`myutils-chat-input-${CLIENT_ID}`).placeholder = `Skriv en melding eller kommando (${config.commandPrefix}menu for meny)`;
+
+        const params = args.filter(arg => !arg.startsWith('-'));
+        const flags = args.filter(arg => arg.startsWith('-'));
+        const parsedFlags = parseFlags(flags, commandInfo.flags);
+        
+        executeCommand(cmd, params, parsedFlags);
+    }
+    
+    // --- Kanal-valg logikk ---
+    function displayChannelSelectionMenu() {
+        const channels = MyUtils.listChannels();
+        const menuOptions = channels.map((c, index) => {
+            const activeTag = c.name === state.currentChannel ? ' **(Aktiv)**' : '';
+            return `${index + 1}. **${c.name}** - *${c.description || 'Ingen beskrivelse'}*${activeTag}`;
+        });
+        
+        state.currentMode = 'channel-select';
+        state.currentMenu = channels.map(c => c.name);
+        appendSystemMessage(`**Bytt til kanal**<br>${menuOptions.join('<br>')}<br>Skriv nummeret på kanalen du vil bytte til.`, '🔄');
+    }
+
+    function handleChannelSelection(selection) {
+        const index = parseInt(selection, 10) - 1;
+        if (isNaN(index) || index < 0 || index >= state.currentMenu.length) {
+            appendSystemMessage('Ugyldig valg. Vennligst skriv et nummer fra listen.', '❌');
+            return;
+        }
+
+        const channelName = state.currentMenu[index];
+        state.currentMode = 'chat';
+        document.getElementById(`myutils-chat-input-${CLIENT_ID}`).placeholder = `Skriv en melding eller kommando (${config.commandPrefix}menu for meny)`;
+        switchChannel(channelName);
+    }
+
+    // --- Hjelpefunksjoner ---
+    function switchChannel(channelName) {
+        if (state.currentChannel === channelName) {
+            appendSystemMessage(`Du er allerede i kanalen **${state.currentChannel}**.`);
+            return;
+        }
+        if (activeListeners[state.currentChannel]) {
+            activeListeners[state.currentChannel]();
+            delete activeListeners[state.currentChannel];
+        }
+        state.currentChannel = channelName;
+        document.getElementById(`myutils-channel-name-${CLIENT_ID}`).textContent = `#${state.currentChannel}`;
+        document.getElementById(`myutils-chat-log-${CLIENT_ID}`).innerHTML = '';
+        appendSystemMessage(`Byttet til kanal: **${state.currentChannel}**.`);
+        activeListeners[state.currentChannel] = MyUtils.onMessage(state.currentChannel, handleIncomingMessage);
+        saveState();
+    }
+
     function handleIncomingMessage(message) {
-        const chatLog = document.getElementById('myutils-chat-log');
+        if (message.from === SCRIPT_NAME && message.messageId) {
+            const lastMessageId = MyUtils.get(`last_message_id_${CLIENT_ID}`, -1);
+            if (message.messageId <= lastMessageId) {
+                return;
+            }
+            MyUtils.set(`last_message_id_${CLIENT_ID}`, message.messageId);
+        }
+        
+        const chatLog = document.getElementById(`myutils-chat-log-${CLIENT_ID}`);
         const messageEl = MyUtils.createElement('div', { class: 'message' });
         const sender = message.from || 'Ukjent';
         const timestamp = new Date(message.timestamp).toLocaleTimeString();
         const content = message.data.text || JSON.stringify(message.data);
-
-        messageEl.innerHTML = `
-            <span class="sender">${sender}</span>: ${content}
-            <span class="timestamp">${timestamp}</span>
-        `;
-        chatLog.appendChild(messageEl);
-        chatLog.scrollTop = chatLog.scrollHeight; // Scroll til bunnen
-    }
-
-    // Hjelpefunksjon for å legge til systemmeldinger i chatten
-    function appendSystemMessage(text) {
-        const chatLog = document.getElementById('myutils-chat-log');
-        const messageEl = MyUtils.createElement('div', { class: 'message' });
-        messageEl.innerHTML = `
-            <span style="font-weight: bold; color: #f4d03f;">[System]</span>: ${text}
-            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
-        `;
+        messageEl.innerHTML = `<span class="sender">${sender}</span>: ${content}<span class="timestamp">${timestamp}</span>`;
         chatLog.appendChild(messageEl);
         chatLog.scrollTop = chatLog.scrollHeight;
     }
 
-    // Hjelpefunksjon for å parse flagg som --key "value"
-    function parseFlags(args) {
+    function appendSystemMessage(text, emoji = 'ℹ️') {
+        const chatLog = document.getElementById(`myutils-chat-log-${CLIENT_ID}`);
+        const messageEl = MyUtils.createElement('div', { class: 'message' });
+        messageEl.innerHTML = `<span class="system">${emoji} [System]</span>: ${text}<span class="timestamp">${new Date().toLocaleTimeString()}</span>`;
+        chatLog.appendChild(messageEl);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function parseFlags(args, flagMapping) {
         const options = {};
         for (let i = 0; i < args.length; i++) {
-            if (args[i].startsWith('--')) {
-                const key = args[i].substring(2);
-                let value = args[i + 1];
-                if (value === 'true' || value === 'false') {
-                    value = value === 'true';
-                } else if (!isNaN(Number(value))) {
-                    value = Number(value);
+            const arg = args[i];
+            if (arg.startsWith('-')) {
+                const fullFlag = flagMapping[arg];
+                if (fullFlag) {
+                    let value = args[i + 1];
+                    if (value) {
+                        if (value === 'true' || value === 'false') {
+                            options[fullFlag] = value === 'true';
+                        } else if (!isNaN(Number(value))) {
+                            options[fullFlag] = Number(value);
+                        } else {
+                            options[fullFlag] = value;
+                        }
+                        i++;
+                    } else {
+                        options[fullFlag] = true;
+                    }
                 }
-                options[key] = value;
-                i++; // Hopp over verdien
             }
         }
         return options;
     }
 
-    // Hjelpefunksjon for å gjøre UI-elementet flyttbart
     function makeDraggable(element, handle) {
         let isDragging = false;
         let offset = { x: 0, y: 0 };
-
         handle.addEventListener('mousedown', (e) => {
             isDragging = true;
             offset.x = e.clientX - element.getBoundingClientRect().left;
@@ -351,15 +433,13 @@
             element.style.cursor = 'grabbing';
             element.style.userSelect = 'none';
         });
-
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             element.style.left = `${e.clientX - offset.x}px`;
             element.style.top = `${e.clientY - offset.y}px`;
-            element.style.right = 'auto'; // Deaktiverer CSS-posisjonering
+            element.style.right = 'auto';
             element.style.bottom = 'auto';
         });
-
         document.addEventListener('mouseup', () => {
             isDragging = false;
             element.style.cursor = 'grab';
@@ -367,7 +447,5 @@
         });
     }
 
-    // Start UI-et når siden er lastet
     MyUtils.waitForElement('body').then(createChatUI);
-
 })();
