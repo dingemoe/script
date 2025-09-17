@@ -438,7 +438,7 @@
   // FINAL SETUP
   // =====================
   
-  tracer.scriptReady(SCRIPT_NAME);
+  tracer.info(`🎉 Script fully initialized: ${SCRIPT_NAME}`);
   tracer.info('🎉 DevOpsChat UI (A) with Smart Tracing fully initialized!', {
     version: SCRIPT_VERSION,
     sessionId: sessionId,
