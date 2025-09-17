@@ -2,7 +2,7 @@
 // @name         DevOpsChat Agent (B) + jQuery (global)
 // @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      2.1.1
+// @version      2.1.3
 // @description  Agenten på målsiden som svarer på RPC fra UI (A).
 // @author       dingemoe
 // @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-Agent-B.user.js
@@ -20,8 +20,8 @@
 
   // Script info and modified time logging
   const SCRIPT_NAME = 'DevOpsChat Agent (B) + jQuery (global)';
-  const SCRIPT_VERSION = '2.1.1';
-  const MODIFIED_DATE = new Date('2025-09-17T21:45:00Z'); // Update this when modifying script
+  const SCRIPT_VERSION = '2.1.3';
+  const MODIFIED_DATE = new Date('2025-09-17T23:39:19Z'); // ✅ Auto-versioned to v2.1.3 on 2025-09-17 23:39
   
   const getRelativeTime = (date) => {
     const now = new Date();

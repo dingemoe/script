@@ -607,18 +607,25 @@ class DevOpsChatTracing {
         const style = styles[logEntry.level] || '';
         const prefix = `[${logEntry.level.toUpperCase()}] ${logEntry.message}`;
 
+        // Bind console methods to avoid "Illegal invocation" errors
+        const consoleBound = {
+            groupCollapsed: console.groupCollapsed.bind(console),
+            log: console.log.bind(console),
+            groupEnd: console.groupEnd.bind(console)
+        };
+
         if (Object.keys(logEntry.data).length > 0 || Object.keys(logEntry.context).length > 1) {
-            console.groupCollapsed(`%c${prefix}`, style);
+            consoleBound.groupCollapsed(`%c${prefix}`, style);
             if (Object.keys(logEntry.data).length > 0) {
-                console.log('Data:', logEntry.data);
+                consoleBound.log('Data:', logEntry.data);
             }
-            console.log('Context:', logEntry.context);
+            consoleBound.log('Context:', logEntry.context);
             if (logEntry.stack) {
-                console.log('Stack:', logEntry.stack);
+                consoleBound.log('Stack:', logEntry.stack);
             }
-            console.groupEnd();
+            consoleBound.groupEnd();
         } else {
-            console.log(`%c${prefix}`, style);
+            consoleBound.log(`%c${prefix}`, style);
         }
     }
 

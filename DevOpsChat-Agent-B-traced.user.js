@@ -2,7 +2,7 @@
 // @name         DevOpsChat Agent (B) + jQuery [WITH TRACING]
 // @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      2.2.1
+// @version      2.2.3
 // @description  RPC Agent på målsiden + Smart Tracing System
 // @author       dingemoe
 // @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-Agent-B-traced.user.js
@@ -36,8 +36,8 @@
 
   // Script info med tracing
   const SCRIPT_NAME = 'DevOpsChat Agent (B) + jQuery [TRACED]';
-  const SCRIPT_VERSION = '2.2.1';
-  const MODIFIED_DATE = new Date('2025-09-17T23:19:05Z'); // ✅ Fixed event.data null check + Beer CSS URL
+  const SCRIPT_VERSION = '2.2.3';
+  const MODIFIED_DATE = new Date('2025-09-17T23:39:19Z'); // ✅ Auto-versioned to v2.2.3 on 2025-09-17 23:39
   
   tracer.info(`🚀 Script started: ${SCRIPT_NAME} v${SCRIPT_VERSION}`);
   

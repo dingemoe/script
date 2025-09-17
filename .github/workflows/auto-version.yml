@@ -1,0 +1,106 @@
+name: Auto-Version Userscripts
+
+on:
+  push:
+    paths:
+      - '*.user.js'
+    branches:
+      - main
+  pull_request:
+    paths:
+      - '*.user.js'
+
+jobs:
+  auto-version:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full git history for version analysis
+        
+    - name: Setup Git
+      run: |
+        git config --global user.name "DevOpsChat Auto-Versioning"
+        git config --global user.email "auto-version@devopschat.local"
+        
+    - name: Make auto-version script executable
+      run: chmod +x auto-version.sh
+      
+    - name: Detect version bump type
+      id: version-type
+      run: |
+        # Analyze commit messages to determine version bump type
+        COMMIT_MSG=$(git log -1 --pretty=%B)
+        
+        if echo "$COMMIT_MSG" | grep -qi "breaking\|major"; then
+          echo "type=major" >> $GITHUB_OUTPUT
+        elif echo "$COMMIT_MSG" | grep -qi "feat\|feature\|minor"; then
+          echo "type=minor" >> $GITHUB_OUTPUT
+        else
+          echo "type=patch" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "Detected version bump type: $(cat $GITHUB_OUTPUT | grep type= | cut -d= -f2)"
+        
+    - name: Auto-version userscripts
+      run: |
+        ./auto-version.sh --${{ steps.version-type.outputs.type }}
+        
+    - name: Validate userscripts
+      run: |
+        chmod +x validate-userscripts.sh
+        ./validate-userscripts.sh
+        
+    - name: Check for changes
+      id: changes
+      run: |
+        if git diff --quiet; then
+          echo "changes=false" >> $GITHUB_OUTPUT
+        else
+          echo "changes=true" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Commit and push auto-versioned files
+      if: steps.changes.outputs.changes == 'true' && github.event_name == 'push'
+      run: |
+        git add *.user.js
+        git commit -m "🔄 Auto-version userscripts (${{ steps.version-type.outputs.type }} bump)"
+        git push
+        
+    - name: Generate release notes
+      if: steps.changes.outputs.changes == 'true'
+      run: |
+        echo "## 🚀 Auto-Versioned Release" > release-notes.md
+        echo "" >> release-notes.md
+        echo "**Version Bump Type:** ${{ steps.version-type.outputs.type }}" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "### 📦 Updated Userscripts:" >> release-notes.md
+        
+        for file in *.user.js; do
+          if [[ -f "$file" ]]; then
+            version=$(grep -o "@version\s*[0-9]\+\.[0-9]\+\.[0-9]\+" "$file" | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+")
+            echo "- **$file**: v$version" >> release-notes.md
+          fi
+        done
+        
+        echo "" >> release-notes.md
+        echo "### 📋 Installation URLs:" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "#### React Version (Recommended):" >> release-notes.md
+        echo '```' >> release-notes.md
+        echo "https://raw.githubusercontent.com/${{ github.repository }}/main/DevOpsChat-UI-React-traced.user.js" >> release-notes.md
+        echo '```' >> release-notes.md
+        echo "" >> release-notes.md
+        echo "#### Agent Script:" >> release-notes.md
+        echo '```' >> release-notes.md
+        echo "https://raw.githubusercontent.com/${{ github.repository }}/main/DevOpsChat-Agent-B-traced.user.js" >> release-notes.md
+        echo '```' >> release-notes.md
+        
+    - name: Upload release notes
+      if: steps.changes.outputs.changes == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-notes
+        path: release-notes.md
