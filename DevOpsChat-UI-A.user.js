@@ -266,6 +266,12 @@ workers:
     setStatus(`${cur} — Connecting…`); 
     openSessionWindow(cur); 
   });
+  
+  // Dev section toggle
+  ui.elements.devToggle.addEventListener('click', () => {
+    const isVisible = Renderer.toggleDevSection(ui.devSection);
+    log(`Dev tools ${isVisible ? 'shown' : 'hidden'}`, 'info');
+  });
   inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { handle(e.target.value); e.target.value=''; }});
 
   await loadSessions();
