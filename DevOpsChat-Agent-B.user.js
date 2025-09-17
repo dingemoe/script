@@ -17,6 +17,30 @@
   if (window.top !== window.self) return;
   if (window.__DEVOPSCHAT_AGENT_B__) return;
   window.__DEVOPSCHAT_AGENT_B__ = true;
+
+  // Script info and modified time logging
+  const SCRIPT_NAME = 'DevOpsChat Agent (B) + jQuery (global)';
+  const SCRIPT_VERSION = '2.1.0';
+  const MODIFIED_DATE = new Date('2025-09-17T20:00:00Z'); // Update this when modifying script
+  
+  const getRelativeTime = (date) => {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+    
+    if (diffSec < 60) return `${diffSec}s siden`;
+    if (diffMin < 60) return `${diffMin}min siden`;
+    if (diffHour < 24) return `${diffHour}t siden`;
+    return `${diffDay}d siden`;
+  };
+  
+  console.log(`🤖 ${SCRIPT_NAME} v${SCRIPT_VERSION}`);
+  console.log(`📅 Modified: ${MODIFIED_DATE.toLocaleDateString('nb-NO')} ${MODIFIED_DATE.toLocaleTimeString('nb-NO')} (${getRelativeTime(MODIFIED_DATE)})`);
+  console.log('---');
+
   const getSessionFromHash = () => {
     try {
       const h = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
