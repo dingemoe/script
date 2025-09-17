@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Isolation Test</title>
+    <style>
+        /* Host page styles - these should NOT be affected by Beer CSS */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 20px;
+        }
+        
+        .test-element {
+            background-color: #ff0000;
+            color: white;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 5px;
+        }
+        
+        /* Test that Beer CSS button styles don't leak */
+        button {
+            background-color: #008000;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        h1, h2, h3 {
+            color: #333;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSS Isolation Test Page</h1>
+    <p>This page tests that DevOpsChat's Beer CSS styles are properly isolated and don't affect the host page.</p>
+    
+    <div class="test-element">
+        <h2>Test Element</h2>
+        <p>This element should maintain its red background and white text, regardless of Beer CSS being loaded.</p>
+        <button onclick="alert('Host page button works!')">Host Page Button</button>
+    </div>
+    
+    <div class="test-element">
+        <h3>Material Design Elements</h3>
+        <p>These elements should NOT be styled by Beer CSS Material Design components:</p>
+        <ul>
+            <li>List item 1</li>
+            <li>List item 2</li>
+            <li>List item 3</li>
+        </ul>
+        <input type="text" placeholder="Regular input field" style="padding: 5px; margin: 5px;">
+        <button>Another Button</button>
+    </div>
+    
+    <script>
+        // Monitor for any unexpected style changes
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeName === 'STYLE' || node.nodeName === 'LINK') {
+                            console.log('Style added to document:', node);
+                        }
+                    });
+                }
+            });
+        });
+        
+        observer.observe(document.head, { childList: true });
+        observer.observe(document.body, { childList: true });
+        
+        console.log('🧪 CSS Isolation Test: Page loaded, monitoring for style leaks...');
+        
+        // Test that Beer CSS classes don't exist in global scope
+        setTimeout(() => {
+            const testElement = document.createElement('div');
+            testElement.className = 'button primary';
+            document.body.appendChild(testElement);
+            
+            const computedStyle = window.getComputedStyle(testElement);
+            const hasBeeerCSS = computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' && 
+                                computedStyle.backgroundColor !== 'transparent';
+            
+            if (hasBeeerCSS) {
+                console.error('❌ CSS LEAK DETECTED: Beer CSS is affecting global styles!');
+                alert('CSS LEAK DETECTED: Beer CSS is affecting global styles!');
+            } else {
+                console.log('✅ CSS ISOLATION: Beer CSS is properly isolated');
+            }
+            
+            testElement.remove();
+        }, 2000);
+    </script>
+</body>
+</html>
