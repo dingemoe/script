@@ -1,14 +1,17 @@
 // ==UserScript==
-// @name         DevOpsChat UI (A) — Sessions + Panel (githack) + YAML-tab
+// @name         DevOpsChat UI (A) — Vue 3 + Beer CSS Edition
 // @match        *://*/*
-// @version      4
-// @description  Slankt UI som laster panel og helpers fra GitHub via raw.githack.com. Har Rediger, Oppsett (session-<id>.yaml), YAML (alle yaml).
+// @version      5
+// @description  Modern reactive UI med Vue 3 og Beer CSS. Sessions + Panel + YAML-tab.
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @grant        GM.deleteValue
 // @grant        GM_getResourceText
 // @grant        GM_addStyle
 // @resource     devopschat-style https://raw.githack.com/dingemoe/script/main/style/style.css
+// @resource     beer-css https://cdn.jsdelivr.net/npm/beercss@3.7.11/dist/cdn/beer.min.css
+// @resource     material-icons https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200
+// @require      https://unpkg.com/vue@3/dist/vue.global.js
 // @noframes
 // ==/UserScript==
 
