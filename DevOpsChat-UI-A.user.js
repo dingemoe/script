@@ -95,7 +95,10 @@
 
   // Initialize Modular Vue App (with shadow DOM context)
   console.log('🚀 Initializing modular render system in isolated shadow DOM...');
-  const renderController = await VueRenderer.createApp(appContainer, { shadowRoot });
+  const renderController = await VueRenderer.createApp(appContainer, { 
+    shadowRoot, 
+    vue: window.Vue // Pass Vue instance explicitly for shadow DOM
+  });
   
   // Helper functions for Vue integration
   const log = (text, type = 'normal') => VueRenderer.addLog(renderController, text, type);
