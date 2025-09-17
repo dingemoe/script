@@ -39,7 +39,7 @@
   const SCRIPT_VERSION = '2.2.0';
   const MODIFIED_DATE = new Date('2025-09-17T23:15:00Z'); // ✅ Modification tracking
   
-  tracer.scriptStarted(SCRIPT_NAME, SCRIPT_VERSION);
+  tracer.info(`🚀 Script started: ${SCRIPT_NAME} v${SCRIPT_VERSION}`);
   
   const getRelativeTime = (date) => {
     const now = new Date();
