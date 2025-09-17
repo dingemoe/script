@@ -10,6 +10,8 @@
 
     let test = 1;
 
+    console.log("daniel")
+
     if (typeof window.MyUtils === 'undefined') {
         console.error('MyUtils-biblioteket er ikke lastet.');
         return;
