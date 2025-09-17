@@ -2,7 +2,7 @@
 // @name         DevOpsChat UI (A) — Vue 3 + Beer CSS Edition [WITH TRACING]
 // @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      5.2.0
+// @version      5.2.1
 // @description  Modern reactive UI med Vue 3 og Beer CSS + Smart Tracing System
 // @author       dingemoe
 // @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-UI-A-traced.user.js
