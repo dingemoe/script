@@ -3,11 +3,24 @@
  * Handles chat interface, sessions, and command input
  */
 
-const getVue = () => {
-  if (typeof Vue === 'undefined') {
-    throw new Error('Vue is not loaded yet. Make sure Vue 3 is available globally.');
+// Dynamic imports for Vue access - support shadow DOM context
+const getVue = (vueInstance = null) => {
+  // If Vue instance is provided directly, use it
+  if (vueInstance) {
+    return vueInstance;
   }
-  return Vue;
+  
+  // Try to get from window (for non-shadow DOM contexts)
+  if (typeof window !== 'undefined' && window.Vue) {
+    return window.Vue;
+  }
+  
+  // Try global Vue (fallback)
+  if (typeof Vue !== 'undefined') {
+    return Vue;
+  }
+  
+  throw new Error('Vue is not loaded yet. Make sure Vue 3 is available globally or pass Vue instance.');
 };
 
 export class ChatPanelController {
