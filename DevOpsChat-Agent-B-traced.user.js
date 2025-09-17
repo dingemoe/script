@@ -82,6 +82,11 @@
   // =====================
   
   const handleRPCMessage = window.DevOpsChatTrace.safe((event) => {
+    // Safety check for event and event.data
+    if (!event || !event.data) {
+      return;
+    }
+    
     const message = event.data;
     
     // Filtrer kun DevOpsChat RPC meldinger
