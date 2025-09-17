@@ -2,7 +2,7 @@
 // @name         DevOpsChat UI (A) — Vue 3 + Beer CSS Edition
 // @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      5.1.0
+// @version      5.1.1
 // @description  Modern reactive UI med Vue 3 og Beer CSS. Sessions + Panel + YAML-tab.
 // @author       dingemoe
 // @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-UI-A.user.js
