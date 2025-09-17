@@ -33,6 +33,27 @@
   
   const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
   
+  // Add loading indicator while Vue loads
+  const loadingDiv = document.createElement('div');
+  loadingDiv.innerHTML = `
+    <div style="
+      position: fixed; 
+      top: 20px; 
+      right: 20px; 
+      background: rgba(0,0,0,0.8); 
+      color: white; 
+      padding: 10px 15px; 
+      border-radius: 5px; 
+      font-family: monospace; 
+      font-size: 12px;
+      pointer-events: auto;
+      z-index: 999999;
+    ">
+      🚀 DevOpsChat Loading...
+    </div>
+  `;
+  shadowRoot.appendChild(loadingDiv);
+  
   // Load CSS resources into shadow DOM
   try {
     const beerCSS = GM_getResourceText('beer-css');
