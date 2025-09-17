@@ -4,9 +4,11 @@
 .dc-wrapper {
   position: fixed;
   z-index: 999999;
-  top: 12px;
-  right: 12px;
+  bottom: 0px;
+  right: 0px;
   width: 380px;
+  margin: 0;
+  padding: 0;
   font: 12px system-ui;
 }
 
