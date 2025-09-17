@@ -76,8 +76,8 @@
   const renderController = await VueRenderer.createApp(appContainer);
   
   // Helper functions for Vue integration
-  const log = (text, type = 'normal') => vueApp.addLog(text, type);
-  const setStatus = (text, isConnected = false) => vueApp.setStatus(text, isConnected);
+  const log = (text, type = 'normal') => VueRenderer.addLog(renderController, text, type);
+  const setStatus = (text, isConnected = false) => VueRenderer.setStatus(renderController, text, isConnected);
 
   // Sessions / GM
   const STORAGE_SESSIONS = 'dc_sessions_v1';
