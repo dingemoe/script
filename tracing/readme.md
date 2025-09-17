@@ -1,6 +1,310 @@
-Lag en tracing system  som vi kan bruke som støtteverktøy for å løse / få oversikt over erorr: installeres i denne mappen
+# DevOpsChat Smart Tracing System 🔧
 
-Hvis du kjører Vue via CDN (ingen bundler), er nøkkelen å få gode stacktraces og sende dem til en feil-tjeneste som funker i rene <script>-oppsett. Her er et slankt, produksjonsvennlig oppsett du kan lime rett inn – med Sentry som primær (best på errors + sourcemaps) og valgfritt LogRocket for session replay. Jeg viser også hvordan du unngår den berømte Script error.-fella.
+**Komplett feilsporing, ytelsesovervåking og debugging-system for DevOpsChat userscripts**
+
+Dette er et avansert tracing-system spesielt utviklet for DevOpsChat userscripts som gir deg kraftige verktøy for debugging, feilforebyggelse og systemovervåking. Systemet er optimalisert for Tampermonkey/userscript-miljøer og gir detaljert innsikt i Vue-lasting, CDN-tilgjengelighet, RPC-kommunikasjon og ytelse.
+
+## 🚀 Hurtigstart
+
+### 1. Grunnleggende integrasjon
+
+Legg til disse linjene i ditt userscript:
+
+```javascript
+// @require https://raw.githack.com/dingemoe/script/main/tracing/tracing.js
+// @require https://raw.githack.com/dingemoe/script/main/tracing/integration.js
+
+// Initialiser tracing
+const tracer = window.DevOpsChatTrace.init('Ditt Script Navn', {
+    logLevel: 'info',
+    debugMode: window.location.hash.includes('debug')
+});
+
+// Start logging
+tracer.info('🚀 Script startet');
+```
+
+### 2. Automatisk debug-panel
+
+Legg til `#debug` i URL-en for å aktivere debug-panelet:
+```
+https://example.com/#debug
+```
+
+### 3. Tastatursnarvei
+- **Ctrl+Shift+D**: Toggle debug-panel
+- **Ctrl+Shift+T**: Vis systemstatus  
+- **Ctrl+Shift+R**: Test RPC-kommunikasjon
+
+## 📊 Funksjoner
+
+### ✅ Automatisk Feilsporing
+- **Global error capture**: Fanger alle JavaScript-feil automatisk
+- **Vue error handling**: Spesiell håndtering for Vue-komponenter
+- **Promise rejection**: Fanger unhandled promise rejections
+- **Detaljerte stacktraces**: Med kontekst og metadata
+
+### ⚡ Ytelsesovervåking  
+- **Vue loading times**: Måler hvor lang tid Vue bruker på å laste
+- **CDN health checks**: Tester tilgjengelighet for alle CDN-ressurser
+- **Memory monitoring**: Overvåker minnebruk og potensielle lekkasjer
+- **Resource loading**: Sporer lasting av scripts, CSS og andre ressurser
+- **DOM mutation tracking**: Overvåker DOM-endringer og aktivitet
+
+### 🌐 Userscript-spesifikk Overvåking
+- **Shadow DOM creation**: Sporer opprettelse av isolerte DOM-områder
+- **CSS injection**: Overvåker lasting av Beer CSS og andre styles
+- **RPC communication**: Logger meldinger mellom UI og Agent scripts
+- **jQuery availability**: Sjekker jQuery-tilgjengelighet for Agent scripts
+
+### 🔍 Debugging Interface
+- **Real-time debug panel**: Live visning av logger, feil og metrics
+- **System health dashboard**: Oversikt over alle komponenter
+- **CDN status monitor**: Real-time sjekk av CDN-tilgjengelighet
+- **Export functionality**: Last ned alle logs som JSON for detaljert analyse
+
+## 📁 Systemfiler
+
+### Core Files
+- **`tracing.js`**: Hovedmodul med all tracing-logikk
+- **`integration.js`**: Enkle integrasjonsmetoder for userscripts  
+- **`example-integration.js`**: Komplett eksempel på implementering
+
+## 🔧 Detaljert Integrasjon
+
+### For UI Script (A) - Med Vue og Shadow DOM
+
+```javascript
+// Initialiser med UI-spesifikke innstillinger
+const tracer = window.DevOpsChatTrace.init('DevOpsChat UI (A)', {
+    logLevel: 'info',
+    monitorVue: true,        // Overvåk Vue-lasting
+    monitorRPC: true,        // Overvåk RPC-meldinger  
+    monitorCDN: true,        // Sjekk CDN-tilgjengelighet
+    autoDebugPanel: true     // Auto-opprett debug panel hvis #debug
+});
+
+// Overvåk Vue-lasting med timeout
+await tracer.monitorVueLoading(30000);
+
+// Automatisk error wrapping
+const safeFunction = tracer.wrapFunction(() => {
+    // Din kode her - automatisk error capture
+}, 'function_name');
+
+// Timing measurements
+tracer.startTimer('vue_loading');
+// ... Vue loading code ...
+tracer.endTimer('vue_loading');
+```
+
+### For Agent Script (B) - Med jQuery og RPC
+
+```javascript
+// Initialiser for Agent script
+const tracer = window.DevOpsChatTrace.init('DevOpsChat Agent (B)', {
+    logLevel: 'debug',
+    monitorRPC: true,
+    monitorDOM: true
+});
+
+// Overvåk jQuery tilgjengelighet
+tracer.monitorJQueryLoading();
+
+// Automatisk RPC monitoring
+tracer.monitorRPCCommunication();
+
+// Safe async operations
+await tracer.safeAsync(async () => {
+    // Async operasjoner med automatisk error handling
+}, 'async_operation');
+```
+
+## 🎯 Praktiske Eksempler
+
+### Debugging Vue Loading Issues
+
+```javascript
+// Start tracing Vue loading
+tracer.startTimer('vue_total');
+
+try {
+    await tracer.monitorVueLoading(30000);
+    tracer.info('✅ Vue loaded successfully');
+} catch (error) {
+    tracer.error('❌ Vue loading failed', {
+        timeout: 30000,
+        availableCDNs: await tracer.checkCDNHealth()
+    });
+}
+
+tracer.endTimer('vue_total');
+```
+
+### Monitor CDN Health
+
+```javascript
+// Sjekk alle CDN-ressurser
+const healthReport = await tracer.checkCDNHealth();
+tracer.info('🌐 CDN Health Report', healthReport);
+
+// Resultat:
+// [
+//   { url: 'https://cdn.jsdelivr.net/...', available: true },
+//   { url: 'https://unpkg.com/...', available: false },
+//   ...
+// ]
+```
+
+### RPC Communication Testing
+
+```javascript
+// Test RPC-forbindelse
+tracer.testRPC(); // Sender ping og venter på pong
+
+// Manual RPC logging
+window.postMessage({
+    kind: 'rpc_call',
+    method: 'test',
+    data: { message: 'Hello' }
+}, '*');
+// Automatisk loggført av tracer
+```
+
+### Performance Monitoring
+
+```javascript
+// Memory usage
+const memory = tracer.getMemoryUsage();
+// { used: 45, total: 120, limit: 2048 } (MB)
+
+// Performance snapshot  
+const perf = tracer.getPerformanceSnapshot();
+// Komplett oversikt over timing, memory, resources
+
+// Current state
+const state = tracer.debugState();
+// Detaljert oversikt over Vue, jQuery, DOM, etc.
+```
+
+## 🚨 Error Prevention og Debugging
+
+### Automatisk Error Wrapping
+
+```javascript
+// Wrap enkeltfunksjoner
+const safeFn = tracer.wrapFunction(riskyFunction, 'risky_operation');
+
+// Wrap async funksjoner  
+const safeAsyncFn = tracer.wrapAsyncFunction(asyncFunction, 'async_operation');
+
+// Direkte safe execution
+tracer.safe(() => {
+    // Kode som kan feile
+}, 'operation_name');
+
+await tracer.safeAsync(async () => {
+    // Async kode med error handling
+}, 'async_operation_name');
+```
+
+### Shorthand Logging
+
+```javascript
+// Enkle logging-metoder
+window.trace.log('Info message', { data: 'value' });
+window.trace.error('Error occurred', { context: 'details' });
+window.trace.warn('Warning message');
+window.trace.debug('Debug info');
+
+// Timing
+window.trace.time('operation');
+// ... operasjon ...
+window.trace.timeEnd('operation');
+
+// Debugging
+window.trace.state();  // Vis systemstatus
+window.trace.rpc();    // Test RPC forbindelse
+```
+
+## 📈 Log Levels og Konfiguration
+
+### Log Levels (prioritetsrekkefølge)
+1. **trace**: Detaljert debug-info (kun med debugMode)
+2. **debug**: Utvikler-info  
+3. **info**: Generell informasjon (standard)
+4. **warn**: Advarsler
+5. **error**: Feil og exceptions
+
+### Konfigurasjon
+
+```javascript
+const tracer = window.DevOpsChatTrace.init('Script Name', {
+    logLevel: 'info',           // Minimum log level
+    debugMode: false,           // Ekstra debug-info
+    autoDebugPanel: true,       // Auto-opprett debug panel
+    monitorVue: true,          // Vue-spesifikk overvåking
+    monitorRPC: true,          // RPC-kommunikasjon
+    monitorCDN: true,          // CDN-tilgjengelighet
+    maxLogs: 1000,             // Maksimalt antall logs i minnet
+    autoFlush: true,           // Auto-lagre til localStorage
+    performance: true,         // Ytelsesovervåking
+    errorCapture: true         // Automatisk error capture
+});
+```
+
+## 💾 Storage og Export
+
+### Automatisk Lagring
+- Logs lagres automatisk i `localStorage`
+- Oppbevarer siste 100 logs mellom sessions
+- Errors lagres separat (siste 50)
+
+### Manual Export
+```javascript
+// Eksporter alle logs som JSON
+tracer.exportLogs();
+
+// Programmatisk tilgang
+const logs = tracer.getLogs();        // Alle logs
+const errors = tracer.getErrors();    // Kun errors  
+const metrics = tracer.getMetrics();  // Ytelsesdata
+```
+
+## 🎨 Debug Panel Features
+
+Debug-panelet viser:
+- **Session Info**: Session ID, uptime, total logs
+- **Error Counter**: Antall feil og advarsler
+- **Real-time Logs**: Siste 20 log-entries med farger
+- **Quick Actions**: Test RPC, sjekk CDN, eksporter logs
+- **System Health**: Vue status, jQuery status, DOM info
+
+### Aktivering
+- Automatisk: Legg til `#debug` i URL
+- Manual: `tracer.createDebugPanel()`
+- Tastatur: `Ctrl+Shift+D`
+
+## 🔗 Sammenligning med Original
+
+**Original system** (Sentry/LogRocket):
+- Generell web-utvikling
+- Eksterne tjenester
+- Krever server setup
+- Kompleks konfiguration
+
+**Nytt DevOpsChat system**:
+- ✅ Userscript-optimalisert
+- ✅ Lokalt/offline-vennlig  
+- ✅ Vue/jQuery-spesifikk
+- ✅ RPC-kommunikasjon monitoring
+- ✅ CDN-tilgjengelighet testing
+- ✅ Shadow DOM støtte
+- ✅ Ingen eksterne avhengigheter
+- ✅ Real-time debug interface
+- ✅ Automatisk error prevention
+
+## 📚 Legacy System (Oppbevart)
 
 Anbefalt «CDN-first» oppsett
 1) Last Vue + Sentry fra CDN (ingen bundling)
