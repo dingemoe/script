@@ -339,7 +339,7 @@
           // Update memory usage
           const memory = window.DevOpsChatTrace.getMemoryUsage();
           if (memory) {
-            this.memoryUsage = \`\${memory.used}MB/\${memory.total}MB\`;
+            this.memoryUsage = `${memory.used}MB/${memory.total}MB`;
           }
         }, 5000);
       }
