@@ -36,10 +36,10 @@
     logLevel: 'info',
     debugMode: window.location.hash.includes('debug'),
     autoDebugPanel: true,
-    monitorVue: false,    // Vi bruker ikke Vue lenger
+    monitorVue: false,    // ALDRI Vue
     monitorReact: true,   // Overvåk React loading
     monitorRPC: true,
-    monitorCDN: true
+    monitorCDN: false     // Deaktiver CDN monitoring for nå
   });
 
   // Script info med tracing
