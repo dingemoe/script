@@ -297,10 +297,9 @@
 
         const commandKey = state.currentMenu[index];
         const commandInfo = commandMap[commandKey];
-        state.currentMode = 'chat';
-        
         if (commandInfo.cmd === 'switchActiveChannel') {
             displayChannelSelectionMenu();
+            state.currentMode = 'chat';
         } else if (commandInfo.params || commandInfo.flags) {
             let promptText = `Skriv inn parametere for **${commandInfo.cmd}**`;
             if (commandInfo.params) {
@@ -312,11 +311,13 @@
             }
             appendSystemMessage(promptText, '👉');
             document.getElementById(`myutils-chat-input-${CLIENT_ID}`).placeholder = `Skriv inn verdier for ${commandInfo.cmd}...`;
-            
+
             state.currentMode = 'param-input';
             state.currentMenu = commandInfo.cmd;
         } else {
-            executeCommand(commandInfo.cmd);
+            // Kall handleCommand direkte for kommandoer uten parametre
+            handleCommand(commandKey);
+            state.currentMode = 'chat';
         }
     }
 
