@@ -56,38 +56,16 @@
   const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
   const { Renderer } = await import(RENDER_URL);
 
-  // Chat UI
-  const wrapper = document.createElement('div');
-  wrapper.className = 'dc-wrapper';
+  // Chat UI - Using Renderer module
+  const ui = Renderer.createUI();
+  document.body.appendChild(ui.wrapper);
   
-  const box = document.createElement('div');
-  box.className = 'dc-chat-box';
-  box.innerHTML = `
-    <div class="dc-header">
-      <strong>DevOpsChat</strong>
-      <span id="dc-status" class="dc-status">No session</span>
-      <button id="dc-open" title="Åpne/bytt til aktiv session">Open</button>
-    </div>
-    <div id="dc-log" class="dc-log"></div>
-    <div class="dc-input-section">
-      <input id="dc-input" class="dc-input" placeholder="/session <navn> <url> | / | /<navn> | /<navn> -d | /<navn> -n nytt | /<navn> -u url | /dom [sel] | /js ...">
-    </div>`;
+  // Extract elements for easy access
+  const { logEl, input: inp, status: statusEl, openBtn } = ui.elements;
   
-  const devSection = document.createElement('div');
-  devSection.className = 'dc-dev';
-  devSection.innerHTML = '<div>Dev Section - Ready for content</div>';
-  
-  wrapper.appendChild(box);
-  wrapper.appendChild(devSection);
-  document.body.appendChild(wrapper);
-  const logEl = box.querySelector('#dc-log');
-  const inp   = box.querySelector('#dc-input');
-  const statusEl = box.querySelector('#dc-status');
-  const log = (t)=>{ const d=document.createElement('div'); d.textContent=t; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; };
-  const setStatus = (text, ok=false)=>{ 
-    statusEl.textContent=text; 
-    statusEl.className = ok ? 'dc-status connected' : 'dc-status';
-  };
+  // Helper functions
+  const log = (text, type = 'normal') => Renderer.addLogEntry(logEl, text, type);
+  const setStatus = (text, isConnected = false) => Renderer.setStatus(statusEl, text, isConnected);
 
   // Sessions / GM
   const STORAGE_SESSIONS = 'dc_sessions_v1';
