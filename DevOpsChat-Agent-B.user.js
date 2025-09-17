@@ -20,8 +20,8 @@
 
   // Script info and modified time logging
   const SCRIPT_NAME = 'DevOpsChat Agent (B) + jQuery (global)';
-  const SCRIPT_VERSION = '2.1.0';
-  const MODIFIED_DATE = new Date('2025-09-17T20:00:00Z'); // Update this when modifying script
+  const SCRIPT_VERSION = '2.1.1';
+  const MODIFIED_DATE = new Date('2025-09-17T21:45:00Z'); // Update this when modifying script
   
   const getRelativeTime = (date) => {
     const now = new Date();
