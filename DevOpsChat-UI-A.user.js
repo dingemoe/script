@@ -16,6 +16,15 @@
   if (window.top !== window.self) return;
   if (window.__DEVOPSCHAT_UI_A__) return;
   window.__DEVOPSCHAT_UI_A__ = true;
+
+  // Load CSS
+  try {
+    const css = GM_getResourceText('devopschat-style');
+    GM_addStyle(css);
+  } catch (e) {
+    console.warn('DevOpsChat: Failed to load CSS resource:', e);
+  }
+
   const GH_USER = 'dingemoe';
   const GH_REPO = 'script';
   const CDN = (...p) => `https://raw.githack.com/${GH_USER}/${GH_REPO}/${p.join('/')}`;
