@@ -42,7 +42,7 @@
 
   // Script info med tracing
   const SCRIPT_NAME = 'DevOpsChat UI (A) — Vue 3 + Beer CSS Edition [TRACED]';
-  const SCRIPT_VERSION = '5.2.0';
+  const SCRIPT_VERSION = '5.2.1';
   const MODIFIED_DATE = new Date('2025-09-17T23:15:00Z'); // ✅ Modification tracking
   
   tracer.info(`🚀 Script started: ${SCRIPT_NAME} v${SCRIPT_VERSION}`);
