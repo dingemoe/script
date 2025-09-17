@@ -1,17 +1,23 @@
 /* DevOpsChat UI Styles */
 
-/* Main chat container */
-.dc-chat-box {
+/* Main wrapper container */
+.dc-wrapper {
   position: fixed;
   z-index: 999999;
   top: 12px;
   right: 12px;
   width: 380px;
   font: 12px system-ui;
+}
+
+/* Main chat container */
+.dc-chat-box {
+  width: 100%;
   background: #fff;
   border: 1px solid #ccc;
   border-radius: 8px;
   box-shadow: 0 6px 20px rgba(0,0,0,.15);
+  margin-bottom: 10px;
 }
 
 /* Header section */
@@ -60,4 +66,9 @@
 /* Dev section with fixed height */
 .dc-dev {
   height: 260px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 10px;
+  overflow: auto;
 }

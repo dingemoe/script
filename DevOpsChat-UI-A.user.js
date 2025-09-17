@@ -55,6 +55,9 @@
   const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
 
   // Chat UI
+  const wrapper = document.createElement('div');
+  wrapper.className = 'dc-wrapper';
+  
   const box = document.createElement('div');
   box.className = 'dc-chat-box';
   box.innerHTML = `
@@ -67,7 +70,14 @@
     <div class="dc-input-section">
       <input id="dc-input" class="dc-input" placeholder="/session <navn> <url> | / | /<navn> | /<navn> -d | /<navn> -n nytt | /<navn> -u url | /dom [sel] | /js ...">
     </div>`;
-  document.body.appendChild(box);
+  
+  const devSection = document.createElement('div');
+  devSection.className = 'dc-dev';
+  devSection.innerHTML = '<div>Dev Section - Ready for content</div>';
+  
+  wrapper.appendChild(box);
+  wrapper.appendChild(devSection);
+  document.body.appendChild(wrapper);
   const logEl = box.querySelector('#dc-log');
   const inp   = box.querySelector('#dc-input');
   const statusEl = box.querySelector('#dc-status');
