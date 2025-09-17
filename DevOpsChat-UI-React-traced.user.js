@@ -437,21 +437,16 @@
   tracer.monitorRPCCommunication();
 
   // =====================
-  // PERFORMANCE MONITORING
+  // PERFORMANCE MONITORING - FORENKLET
   // =====================
   
-  // Kontinuerlig memory monitoring
+  // Kun basic memory monitoring
   setInterval(() => {
     const memory = window.DevOpsChatTrace.getMemoryUsage();
     if (memory && memory.used > 100) { // Over 100MB
       tracer.warn('💾 High memory usage detected', memory);
     }
-  }, 30000);
-
-  // Performance snapshot hver 5. minutt
-  setInterval(() => {
-    window.DevOpsChatTrace.getPerformanceSnapshot();
-  }, 300000);
+  }, 60000); // Sjekk hvert minutt i stedet
 
   // =====================
   // KEYBOARD SHORTCUTS MED TRACING
