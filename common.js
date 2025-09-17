@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-    console.log("hei");
+    console.log("hei2");
     
     window.MyUtils = {
         // Eksisterende funksjoner
