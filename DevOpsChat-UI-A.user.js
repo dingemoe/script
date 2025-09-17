@@ -268,24 +268,32 @@ workers:
     logLine('Ukjent kommando.');
   }
 
-  openBtn.addEventListener('click', () => { 
-    const cur = state.current; 
-    if (!cur) { 
-      log('Ingen aktiv session.', 'error'); 
-      return; 
-    } 
-    setStatus(`${cur} — Connecting…`); 
-    openSessionWindow(cur); 
+  // Vue Event Listeners
+  window.addEventListener('devops-command', (e) => {
+    handle(e.detail.command);
   });
-  
-  // Dev section toggle
-  ui.elements.devToggle.addEventListener('click', () => {
-    const isVisible = Renderer.toggleDevSection(ui.devSection);
-    log(`Dev tools ${isVisible ? 'shown' : 'hidden'}`, 'info');
-  });
-  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { handle(e.target.value); e.target.value=''; }});
 
+  window.addEventListener('devops-open-session', (e) => {
+    const sessionName = e.detail.session;
+    if (!state.sessions[sessionName]) {
+      log('Ingen aktiv session.', 'error');
+      return;
+    }
+    setStatus(`${sessionName} — Connecting…`);
+    openSessionWindow(sessionName);
+  });
+
+  // Initialize
   await loadSessions();
-  if (Object.keys(state.sessions).length) setStatus('No session — press "/"');
-  else { setStatus('No session'); log('Opprett en session: /session <navn> <url>'); }
+  
+  // Update Vue app with initial state
+  vueApp.sessions = state.sessions;
+  vueApp.currentSession = state.current;
+  
+  if (Object.keys(state.sessions).length) {
+    setStatus('No session — press "/"');
+  } else { 
+    setStatus('No session'); 
+    log('Opprett en session: /session <navn> <url>'); 
+  }
 })();
