@@ -643,7 +643,7 @@ class DevOpsChatTracing {
             };
             localStorage.setItem(this.config.storageKey, JSON.stringify(data));
         } catch (e) {
-            console.warn('Failed to save logs to storage:', e);
+            console.warn.call(console, 'Failed to save logs to storage:', e);
         }
     }
 
