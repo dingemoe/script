@@ -137,60 +137,84 @@
   const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
   const { VueRenderer } = await import(RENDER_URL);
 
-  // Wait for Vue to be available with better error handling
+  // Wait for Vue to be available with comprehensive debugging
   console.log('⏳ Waiting for Vue to be available...');
+  console.log('🔍 Initial Vue check:', typeof window.Vue, window.Vue ? 'FOUND' : 'NOT FOUND');
+  console.log('🔍 Document readyState:', document.readyState);
+  console.log('🔍 Scripts in head:', document.head.querySelectorAll('script[src*="vue"]').length);
+  
   let vueWaitCount = 0;
-  const maxWaitTime = 150; // 15 seconds (150 * 100ms)
+  const maxWaitTime = 30; // Reduce to 3 seconds for faster fallback
   
   while (typeof window.Vue === 'undefined' && vueWaitCount < maxWaitTime) {
     await new Promise(resolve => setTimeout(resolve, 100));
     vueWaitCount++;
     
-    // Log progress every 2 seconds
-    if (vueWaitCount % 20 === 0) {
-      console.log(`⏳ Still waiting for Vue... (${vueWaitCount / 10}s)`);
+    // Log progress every 1 second  
+    if (vueWaitCount % 10 === 0) {
+      console.log(`⏳ Still waiting for Vue... (${vueWaitCount / 10}s) - trying fallback soon`);
+    }
+  }
+  
+  // If Vue still not loaded, try immediate fallback
+  if (typeof window.Vue === 'undefined') {
+    console.warn('⚠️ Vue not loaded via @require after 3 seconds - trying immediate fallback');
+    
+    // Try multiple fallback strategies
+    const fallbackStrategies = [
+      'https://unpkg.com/vue@3/dist/vue.global.prod.js',
+      'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js'
+    ];
+    
+    for (const [index, vueUrl] of fallbackStrategies.entries()) {
+      console.log(`🔄 Fallback ${index + 1}: Loading Vue from ${vueUrl}`);
+      
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = vueUrl;
+          script.onload = () => {
+            console.log(`✅ Vue loaded successfully from fallback ${index + 1}`);
+            resolve();
+          };
+          script.onerror = () => {
+            console.error(`❌ Fallback ${index + 1} failed`);
+            reject(new Error(`Failed to load from ${vueUrl}`));
+          };
+          document.head.appendChild(script);
+        });
+        
+        // Wait a bit for Vue to initialize
+        let fallbackWaitCount = 0;
+        while (typeof window.Vue === 'undefined' && fallbackWaitCount < 20) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          fallbackWaitCount++;
+        }
+        
+        if (typeof window.Vue !== 'undefined') {
+          console.log(`✅ Vue available after fallback ${index + 1}!`);
+          break;
+        }
+        
+      } catch (e) {
+        console.error(`❌ Fallback ${index + 1} error:`, e);
+        if (index === fallbackStrategies.length - 1) {
+          console.error('❌ All Vue loading strategies failed');
+          alert('❌ DevOpsChat: Could not load Vue from any source. Please check your internet connection and refresh the page.');
+          return;
+        }
+      }
     }
   }
   
   if (typeof window.Vue === 'undefined') {
-    console.error('❌ Vue not loaded after 15 seconds');
-    console.error('🔍 Debugging Vue loading...');
-    console.error('🔍 document.readyState:', document.readyState);
-    console.error('🔍 window.Vue:', typeof window.Vue);
-    console.error('🔍 Available globals:', Object.keys(window).filter(k => k.includes('Vue') || k.includes('vue')));
-    
-    // Try to manually load Vue as fallback
-    console.log('🔄 Attempting manual Vue load as fallback...');
-    try {
-      const vueScript = document.createElement('script');
-      vueScript.src = 'https://unpkg.com/vue@3/dist/vue.global.prod.js';
-      vueScript.onload = () => {
-        console.log('✅ Vue loaded manually!');
-      };
-      vueScript.onerror = () => {
-        console.error('❌ Manual Vue load failed too');
-      };
-      document.head.appendChild(vueScript);
-      
-      // Wait a bit more for manual load
-      let manualWaitCount = 0;
-      while (typeof window.Vue === 'undefined' && manualWaitCount < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        manualWaitCount++;
-      }
-      
-      if (typeof window.Vue === 'undefined') {
-        alert('❌ DevOpsChat: Vue loading failed completely. Please refresh the page or check your internet connection.');
-        return;
-      }
-    } catch (e) {
-      console.error('❌ Manual Vue loading error:', e);
-      alert('❌ DevOpsChat: Critical error loading Vue. Please refresh the page.');
-      return;
-    }
+    console.error('❌ Vue loading failed completely after all attempts');
+    alert('❌ DevOpsChat: Critical Vue loading failure. Please refresh the page or disable other userscripts that might interfere.');
+    return;
   }
   
-  console.log('✅ Vue is available:', window.Vue);
+  console.log('✅ Vue is available:', window.Vue.version || 'version unknown');
 
   // Vue App Container (inside shadow DOM)
   const appContainer = document.createElement('div');
