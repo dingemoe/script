@@ -93,17 +93,57 @@
   const { randId, normalizeUrl, addSessionHash, originOf } = await import(UTILS_URL);
   const { VueRenderer } = await import(RENDER_URL);
 
-  // Wait for Vue to be available
+  // Wait for Vue to be available with better error handling
   console.log('⏳ Waiting for Vue to be available...');
   let vueWaitCount = 0;
-  while (typeof window.Vue === 'undefined' && vueWaitCount < 50) {
+  const maxWaitTime = 150; // 15 seconds (150 * 100ms)
+  
+  while (typeof window.Vue === 'undefined' && vueWaitCount < maxWaitTime) {
     await new Promise(resolve => setTimeout(resolve, 100));
     vueWaitCount++;
+    
+    // Log progress every 2 seconds
+    if (vueWaitCount % 20 === 0) {
+      console.log(`⏳ Still waiting for Vue... (${vueWaitCount / 10}s)`);
+    }
   }
   
   if (typeof window.Vue === 'undefined') {
-    console.error('❌ Vue not loaded after 5 seconds');
-    return;
+    console.error('❌ Vue not loaded after 15 seconds');
+    console.error('🔍 Debugging Vue loading...');
+    console.error('🔍 document.readyState:', document.readyState);
+    console.error('🔍 window.Vue:', typeof window.Vue);
+    console.error('🔍 Available globals:', Object.keys(window).filter(k => k.includes('Vue') || k.includes('vue')));
+    
+    // Try to manually load Vue as fallback
+    console.log('🔄 Attempting manual Vue load as fallback...');
+    try {
+      const vueScript = document.createElement('script');
+      vueScript.src = 'https://unpkg.com/vue@3/dist/vue.global.prod.js';
+      vueScript.onload = () => {
+        console.log('✅ Vue loaded manually!');
+      };
+      vueScript.onerror = () => {
+        console.error('❌ Manual Vue load failed too');
+      };
+      document.head.appendChild(vueScript);
+      
+      // Wait a bit more for manual load
+      let manualWaitCount = 0;
+      while (typeof window.Vue === 'undefined' && manualWaitCount < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        manualWaitCount++;
+      }
+      
+      if (typeof window.Vue === 'undefined') {
+        alert('❌ DevOpsChat: Vue loading failed completely. Please refresh the page or check your internet connection.');
+        return;
+      }
+    } catch (e) {
+      console.error('❌ Manual Vue loading error:', e);
+      alert('❌ DevOpsChat: Critical error loading Vue. Please refresh the page.');
+      return;
+    }
   }
   
   console.log('✅ Vue is available:', window.Vue);
