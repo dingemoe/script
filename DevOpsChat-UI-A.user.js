@@ -155,15 +155,22 @@
 
   // Initialize Modular Vue App (with shadow DOM context)
   console.log('🚀 Initializing modular render system in isolated shadow DOM...');
+  console.log('🔍 Shadow DOM setup complete, container ready');
+  console.log('🔍 Vue version:', window.Vue?.version || 'version unknown');
   
-  const renderController = await VueRenderer.createApp(appContainer, { 
-    shadowRoot, 
-    vue: window.Vue // Pass Vue instance explicitly for shadow DOM
-  });
-  
-  // Helper functions for Vue integration
-  const log = (text, type = 'normal') => VueRenderer.addLog(renderController, text, type);
-  const setStatus = (text, isConnected = false) => VueRenderer.setStatus(renderController, text, isConnected);
+  try {
+    const renderController = await VueRenderer.createApp(appContainer, { 
+      shadowRoot, 
+      vue: window.Vue // Pass Vue instance explicitly for shadow DOM
+    });
+    
+    console.log('✅ Render controller initialized successfully');
+    console.log('🔍 App container in DOM:', appContainer.isConnected);
+    console.log('🔍 Shadow root children:', shadowRoot.children.length);
+    
+    // Helper functions for Vue integration
+    const log = (text, type = 'normal') => VueRenderer.addLog(renderController, text, type);
+    const setStatus = (text, isConnected = false) => VueRenderer.setStatus(renderController, text, isConnected);
 
   // Sessions / GM
   const STORAGE_SESSIONS = 'dc_sessions_v1';
