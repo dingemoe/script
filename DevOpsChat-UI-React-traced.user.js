@@ -2,7 +2,7 @@
 // @name         DevOpsChat UI (React) — React 18 + DaisyUI Edition [WITH TRACING]
 // @namespace    https://github.com/dingemoe/script
 // @match        *://*/*
-// @version      6.0.0
+// @version      6.0.1
 // @description  Modern reactive UI med React 18 og DaisyUI + Smart Tracing System
 // @author       dingemoe
 // @downloadURL  https://raw.githubusercontent.com/dingemoe/script/main/DevOpsChat-UI-React-traced.user.js
