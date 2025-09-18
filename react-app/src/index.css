@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom DevOpsChat styles */
+.devops-panel {
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.gradient-border {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  padding: 2px;
+  border-radius: 12px;
+}
+
+.gradient-border > div {
+  background: oklch(var(--b1));
+  border-radius: 10px;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dark mode specific improvements */
+@media (prefers-color-scheme: dark) {
+  .glass-effect {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
